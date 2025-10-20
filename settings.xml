@@ -1,0 +1,36 @@
+<settings>
+  <company>
+    <name>Рога и копыта</name>
+    <inn>123456789</inn>
+  </company>
+  <default_receipt>
+    <name>ВАФЛИ ХРУСТЯЩИЕ В ВАФЕЛЬНИЦЕ</name>
+    <portions>10</portions>
+    <cooking_time>20 мин</cooking_time>
+    <categories>
+      <category>
+        <name>Ингредиенты</name>
+        <id>7f4ecdab-0f01-4216-8b72-4c91d22b8918</id>
+      </category>
+    </categories>
+    <ranges>
+      <range>
+        <name>Грамм</name>
+        <id>adb7510f-687d-428f-a697-26e53d3f65b7</id>
+        <base_id>null</base_id>
+        <value>1</value>
+      </range>
+      <range>
+        <name>Штуки</name>
+        <id>f8346e8b-7260-4db8-a673-c8c826ab08b7</id>
+        <base_id>null</base_id>
+        <value>1</value>
+      </range>
+    </ranges>
+    <steps>
+      <step>Как испечь вафли хрустящие...</step>
+      <step>Масло положите...</step>
+      <step>Добавьте сахар...</step>
+    </steps>
+  </default_receipt>
+</settings>

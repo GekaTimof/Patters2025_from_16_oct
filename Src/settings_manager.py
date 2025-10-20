@@ -4,6 +4,8 @@ from Src.Core.validator import operation_exception
 from Src.Core.validator import validator
 from Src.Models.company_model import company_model
 from Src.Core.common import common
+from Src.Core.response_format import response_formats
+import xmltodict
 import os
 import json
 
@@ -11,6 +13,12 @@ import json
 # Менеджер настроек. 
 # Предназначен для управления настройками и хранения параметров приложения
 class settings_manager:
+    # Какому расширеню какой формат соответствует
+    __match_formats = {
+        "xml": response_formats.xml(),
+        "json": response_formats.json(),
+    }
+
     # Наименование файла (полный путь)
     __full_file_name:str = ""
 
@@ -46,23 +54,43 @@ class settings_manager:
         else:
             raise argument_exception(f'Не найден файл настроек {full_file_name}')
 
-    # Загрузить настройки из Json файла
+    # Загрузить настройки из файла (.json .xml .csv .md)
     def load(self) -> bool:
         if self.__full_file_name == "":
             raise operation_exception("Не найден файл настроек!")
 
-        try:
-            with open( self.__full_file_name, 'r') as file_instance:
-                settings = json.load(file_instance)
+        # Определяем расширение файла
+        _, ext = os.path.splitext(self.__full_file_name)
+        ext = ext.lower().replace('.', '')
 
-                if "company" in settings.keys():
+        # Проверяем, что формат поддерживается
+        if ext not in self.__match_formats.keys():
+            raise argument_exception(f"Формат файла '.{ext}' не поддерживается!")
+
+        try:
+            # Читаем файл
+            with open(self.__full_file_name, 'r', encoding='utf-8') as file_instance:
+                if ext == "json":
+                    settings = json.load(file_instance)
+                elif ext == "xml":
+                    # Преобразуем XML → dict
+                    xml_dict = xmltodict.parse(file_instance.read())
+                    # Конвертируем OrderedDict → обычный dict
+                    settings = json.loads(json.dumps(xml_dict))
+
+                # достаем company из xml {'settings': {'company': {...}, 'default_receipt': {...}}}
+                if "settings" in settings:
+                    settings = settings["settings"]
+
+                if "company" in settings:
                     data = settings["company"]
                     return self.convert(data)
 
             return False
         except:
             return False
-        
+
+
     # Обработать полученный словарь    
     def convert(self, data: dict) -> bool:
         validator.validate(data, dict)
@@ -72,7 +100,11 @@ class settings_manager:
 
         try:
             for key in matching_keys:
-                setattr(self.__settings.company, key, data[key])
+                value = data[key]
+                # Если значение - строка числа, конвертируем
+                if isinstance(value, str) and value.isdigit():
+                    value = int(value)
+                setattr(self.__settings.company, key, value)
         except:
             return False        
 

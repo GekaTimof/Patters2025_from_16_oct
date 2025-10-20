@@ -31,9 +31,10 @@ class test_models(unittest.TestCase):
         # Проверки
         assert model.name != ""
 
+
     # Проверить создание основной модели
     # Данные загружаем через json настройки
-    def test_load_createmodel_companymodel(self):
+    def test_json_load_createmodel_companymodel(self):
         # Подготовка
        file_name = "settings.json"
        manager = settings_manager()
@@ -48,10 +49,26 @@ class test_models(unittest.TestCase):
 
 
     # Проверить создание основной модели
+    # Данные загружаем через xml настройки
+    def test_xml_load_createmodel_companymodel(self):
+        # Подготовка
+        file_name = "settings.xml"
+        manager = settings_manager()
+        manager.file_name = file_name
+
+        # Действие
+        result = manager.load()
+
+        # Проверки
+        print(manager.file_name)
+        assert result == True
+
+
+    # Проверить создание основной модели
     # Данные загружаем. Проверяем работу Singletone
     def test_loadCombo_createmodel_companymodel(self):
         # Подготовка
-        file_name = "./settings.json"
+        file_name = "settings.json"
         manager1 = settings_manager()
         manager1.file_name = file_name
         manager2 = settings_manager()
