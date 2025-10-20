@@ -54,11 +54,11 @@ class TestDataFileGeneration(unittest.TestCase):
     def generate_and_save(self, model_name, create_func):
         data = [create_func()]
 
-        for fmt in [response_formats.csv(), response_formats.json(), response_formats.md(), response_formats.xml()]:
-            self.factory.format = fmt
+        for format in [response_formats.csv(), response_formats.json(), response_formats.md(), response_formats.xml()]:
+            self.factory.format = format
             content = self.factory.create_default(data)
-            ext = fmt
-            file_name = f"{model_name}.{ext}"
+            extension = format
+            file_name = f"{model_name}.{extension}"
             self.save_response_to_file(file_name, content)
             print(f"Saved {file_name}")
 
