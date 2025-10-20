@@ -1,11 +1,11 @@
 from Src.Core.abstract_response import abstract_response
 from Src.Core.common import common
-
+from Src.Core.response_format import response_formats
 
 class response_csv(abstract_response):
 
     # Сформировать CSV
-    def create(self, format:str, data: list):
+    def create(self, format: str, data: list):
         text = super().create(format, data)
 
         # Шапка
@@ -19,6 +19,7 @@ class response_csv(abstract_response):
         # Формируем строки данных csv
         for row in data:
             values = [str(getattr(row, f, "")) for f in fields]
+
             text += "\t".join(values) + "\n"
 
         return text

@@ -5,8 +5,12 @@ from Src.Logics.response_xml import response_xml
 from Src.Logics.response_json import response_json
 from Src.Core.response_format import response_formats
 from Src.Core.validator import operation_exception
+from Src.Core.validator import validator
 
 class factory_entities:
+    # текущий формат
+    __format: str
+    # список форматов
     __match = {
         # csv
         response_formats.csv():  response_csv,
@@ -18,6 +22,15 @@ class factory_entities:
         response_formats.xml(): response_xml
     }
 
+    @property
+    def format(self) -> str:
+        return self.__format
+
+    @format.setter
+    def format(self, value: str):
+        validator.validate(value, str)
+        self.__format = value
+
 
     # Получить нужный тип
     def create(self, format:str) -> abstract_response:
@@ -28,8 +41,8 @@ class factory_entities:
 
 
     # создать response заданного типа
-    def create_default(self, format:str, data: list):
+    def create_default(self, data: list):
         # Создаем нужный класс в зависимости от сохраненного формата
-        response_cls = self.create(format)
+        response_cls = self.create(self.format)
         response_instance = response_cls()
-        return response_instance.create(format, data)
+        return response_instance.create(self.format, data)

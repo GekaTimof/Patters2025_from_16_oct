@@ -50,7 +50,7 @@ class receipt_model(entity_model):
     # Фабричный метод для создания нового рецепта
     # Состав и шаги уже созданы. Будут пустыми
     @staticmethod
-    def create(name:str,cooking_time:str, portions:int ) -> "receipt_model":
+    def create(name:str, cooking_time:str, portions:int ) -> "receipt_model":
         item = receipt_model()
         item.name = name
         item.cooking_time = cooking_time

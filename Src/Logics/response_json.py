@@ -11,7 +11,7 @@ class response_json(abstract_response):
             obj = {}
             fields = common.get_fields(row)
             for f in fields:
-                obj[f] = getattr(row, f, "")
+                obj[f] = str(getattr(row, f, ""))
             result.append(obj)
 
         return json.dumps(result, ensure_ascii=False, indent=2)

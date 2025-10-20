@@ -23,7 +23,7 @@ class nomenclature_model(entity_model):
 
     @group.setter
     def group(self, value: group_model):
-        validator.validate(value,entity_model )
+        validator.validate(value, entity_model)
         self.__group = value    
 
     """
@@ -42,7 +42,7 @@ class nomenclature_model(entity_model):
     """
     Универсальный фабричный метод
     """
-    def create(name:str, group:group_model, range:range_model):
+    def create(name:str, group: group_model, range: range_model):
         validator.validate(name, str)
         item = nomenclature_model()
         item.name = name
