@@ -13,14 +13,13 @@ class response_csv(abstract_response):
             return text
         item = data [ 0 ]
 
-        fields = common.get_fields( item )
-        for field in fields:
-            text += f"{field}; \n"
+        fields = common.get_fields(item)
+        text += "\t".join(fields) + "\n"
 
         # Формируем строки данных csv
         for row in data:
             values = [str(getattr(row, f, "")) for f in fields]
-            text += ";".join(values) + "\n"
+            text += "\t".join(values) + "\n"
 
         return text
 
