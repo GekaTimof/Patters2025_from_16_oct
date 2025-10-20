@@ -13,3 +13,11 @@ class response_formats:
     @staticmethod
     def json() -> str:
         return "json"
+
+    @staticmethod
+    def md() -> str:
+        return "md"
+
+    @staticmethod
+    def xml() -> str:
+        return "xml"

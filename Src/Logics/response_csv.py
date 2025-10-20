@@ -9,12 +9,19 @@ class response_csv(abstract_response):
         text = super().create(format, data)
 
         # Шапка
+        if data is None:
+            return text
         item = data [ 0 ]
+
         fields = common.get_fields( item )
         for field in fields:
-            text += f"{field};"
+            text += f"{field}; \n"
 
-        # Данные
+        # Формируем строки данных csv
+        for row in data:
+            values = [str(getattr(row, f, "")) for f in fields]
+            text += ";".join(values) + "\n"
 
-        return text    
+        return text
+
 
