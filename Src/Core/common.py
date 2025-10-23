@@ -41,4 +41,3 @@ class common:
                 result.append(item)
 
         return result
-

@@ -10,7 +10,6 @@ from Src.Models.receipt_item_model import receipt_item_model
 from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.Dtos.range_dto import range_dto
 from Src.Dtos.category_dto import category_dto
-from Src.Dtos.receipt_item_dto import receipt_item_dto
 
 class start_service:
     # Репозиторий
@@ -33,7 +32,24 @@ class start_service:
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(start_service, cls).__new__(cls)
-        return cls.instance 
+        return cls.instance
+
+    @property
+    def data_self(self):
+        return self.__repo.data
+
+    def get_groups(self):
+        return self.__repo.data.get(reposity.group_key(), [])
+
+    def get_ranges(self):
+        return self.__repo.data.get(reposity.range_key(), [])
+
+    def get_nomenclatures(self):
+        return self.__repo.data.get(reposity.nomenclature_key(), [])
+
+    def get_receipts(self):
+        return self.__repo.data.get(reposity.receipt_key(), [])
+
 
     # Текущий файл
     @property
