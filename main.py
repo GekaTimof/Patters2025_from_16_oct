@@ -19,15 +19,14 @@ try:
 except Exception as e:
     print(f"Ошибка при запуске startservice: {e}")
 
-# список всех объектов, уоторые можно представить (храняться в репозитории)
+# список всех объектов, которые можно предоставить (их ключи храняться в репозитории)
 repo_keys = service.repository.keys()
+# ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
 RepoKeyEnum = Enum('RepoKeyEnum', [(key, key) for key in repo_keys], type=str)
 
+# Запрос для получения данных из репозитория по ключу
 @app.get("/data/{repo_key}")
-def get_data(
-    repo_key: RepoKeyEnum,
-    format: str = Query("json", enum=response_formats_arr)
-    ):
+def get_data(repo_key: RepoKeyEnum, format: str = Query("json", enum=response_formats_arr)):
     try:
         if repo_key not in repo_keys:
             raise HTTPException(status_code=404, detail=f"Набор данных {repo_key} не найден")
@@ -39,53 +38,6 @@ def get_data(
         return PlainTextResponse(content=formatted_content)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
-
-
-# @app.get("/groups")
-# def get_groups(format: str = Query("json", enum=response_formats_arr)):
-#     try:
-#         data = service.get_groups()
-#         factory = factory_entities()
-#         formatted_content = factory.create_default(format, data)
-#
-#         return PlainTextResponse(content=formatted_content)
-#     except Exception as e:
-#         return JSONResponse(status_code=500, content={"error": str(e)})
-#
-#
-# @app.get("/ranges")
-# def get_ranges(format: str = Query("json", enum=response_formats_arr)):
-#     try:
-#         data = service.get_ranges()
-#         factory = factory_entities()
-#         formatted_content = factory.create_default(format, data)
-#
-#         return PlainTextResponse(content=formatted_content)
-#     except Exception as e:
-#         return JSONResponse(status_code=500, content={"error": str(e)})
-#
-#
-# @app.get("/receipts")
-# def get_companies(format: str = Query("json", enum=response_formats_arr)):
-#     try:
-#         data = service.get_receipts()
-#         factory = factory_entities()
-#         formatted_content = factory.create_default(format, data)
-#
-#         return PlainTextResponse(content=formatted_content)
-#     except Exception as e:
-#         return JSONResponse(status_code=500, content={"error": str(e)})
-#
-# @app.get("/nomenclatures")
-# def get_companies(format: str = Query("json", enum=response_formats_arr)):
-#     try:
-#         data = service.get_nomenclatures()
-#         factory = factory_entities()
-#         formatted_content = factory.create_default(format, data)
-#
-#         return PlainTextResponse(content=formatted_content)
-#     except Exception as e:
-#         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 @app.get("/")
