@@ -10,7 +10,7 @@ class receipt_model(entity_model):
     __steps:list = []
 
     # Состав
-    __composition:list = []
+    __receipt_items:list = []
 
     # Время приготовления
     __cooking_time:str = ""
@@ -33,8 +33,8 @@ class receipt_model(entity_model):
     
     # Состав
     @property
-    def composition(self) -> list:
-        return self.__composition
+    def receipt_items(self) -> list:
+        return self.__receipt_items
     
     # Время приготовления
     @property

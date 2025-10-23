@@ -9,7 +9,7 @@ import xmltodict
 import os
 import json
 
-####################################################3
+####################################################
 # Менеджер настроек. 
 # Предназначен для управления настройками и хранения параметров приложения
 class settings_manager:
@@ -54,7 +54,7 @@ class settings_manager:
         else:
             raise argument_exception(f'Не найден файл настроек {full_file_name}')
 
-    # Загрузить настройки из файла (.json .xml .csv .md)
+    # Загрузить настройки из файла (.json .xml)
     def load(self) -> bool:
         if self.__full_file_name == "":
             raise operation_exception("Не найден файл настроек!")

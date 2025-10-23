@@ -14,36 +14,35 @@ class reposity:
     Ключ для единц измерений
     """
     @staticmethod
-    def range_key():
-        return "range_model"
-    
+    def ranges_key():
+        return "ranges"
+
 
     """
     Ключ для категорий
     """
     @staticmethod
-    def group_key():
-        return "group_model"
+    def groups_key():
+        return "groups"
     
 
     """
     Ключ для номенклатуры
     """
     @staticmethod
-    def nomenclature_key():
-        return "nomenclature_model"
+    def nomenclatures_key():
+        return "nomenclatures"
     
 
     """
     Ключ для рецептов
     """
     @staticmethod
-    def receipt_key():
-        return "receipt_model"
+    def receipts_key():
+        return "receipts"
     
     """
     Получить список всех ключей
-    Источник: https://github.com/Alyona1619
     """
     @staticmethod
     def keys() -> list:

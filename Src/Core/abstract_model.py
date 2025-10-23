@@ -7,7 +7,7 @@ from Src.Core.validator import validator
 Содержит в себе только генерацию уникального кода
 """
 class abstact_model(ABC):
-    __unique_code:str
+    __unique_code: str
 
     def __init__(self) -> None:
         super().__init__()
@@ -24,7 +24,6 @@ class abstact_model(ABC):
     def unique_code(self, value: str):
         validator.validate(value, str)
         self.__unique_code = value.strip()
-    
 
     """
     Перегрузка штатного варианта сравнения

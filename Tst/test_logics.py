@@ -82,14 +82,13 @@ class test_logics(unittest.TestCase):
         data.append( entity )
 
         # Действие
-        logic = factory.create( response_formats.csv())
+        logic = factory.create(response_formats.csv())
 
         # Проверка
         assert logic is not None
-        instance = logic()
+        instance = logic
         validator.validate( instance,  abstract_response)
         text = instance.create(  response_formats.csv(), data )
-        # print(text)
         assert len(text) > 0
 
 

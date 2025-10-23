@@ -9,7 +9,7 @@ from Src.Core.abstract_dto import abstact_dto
 
 class nomenclature_dto(abstact_dto):
     __range_id:str = ""
-    __category_id:str = ""
+    __group_id:str = ""
 
 
     @property
@@ -21,9 +21,9 @@ class nomenclature_dto(abstact_dto):
         self.__range_id = value
 
     @property
-    def category_id(self) -> str:
-        return self.__category_id
+    def group_id(self) -> str:
+        return self.__group_id
 
-    @category_id.setter
-    def category_id(self, value):
-        self.__category_id = value
+    @group_id.setter
+    def group_id(self, value):
+        self.__group_id = value

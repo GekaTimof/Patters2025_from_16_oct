@@ -1,7 +1,6 @@
-
 import unittest
 from Src.start_service import start_service
-from Src.reposity import reposity
+from Src.repository import reposity
 
 # Набор тестов для проверки работы статового сервиса
 class test_start(unittest.TestCase):
@@ -15,7 +14,7 @@ class test_start(unittest.TestCase):
         start.start()
 
         # Проверка
-        assert len(start.data[ reposity.range_key()]) > 0
+        assert len(start.data[ reposity.ranges_key()]) > 0
 
     # Проверить уникальность элемиентов
     def test_checkUnique_start_service_load(self):
@@ -26,8 +25,8 @@ class test_start(unittest.TestCase):
         start.start()
 
         # Проверка
-        gramm =  list(filter(lambda x: x.name == "Грамм", start.data[ reposity.range_key()])) 
-        kg =  list(filter(lambda x: x.name == "Киллограмм", start.data[ reposity.range_key()])) 
+        gramm =  list(filter(lambda x: x.name == "Грамм", start.data[ reposity.ranges_key()]))
+        kg =  list(filter(lambda x: x.name == "Киллограмм", start.data[ reposity.ranges_key()]))
         assert gramm[0].unique_code == kg[0].base.unique_code
 
 
