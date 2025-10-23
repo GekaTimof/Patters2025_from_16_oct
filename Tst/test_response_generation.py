@@ -8,8 +8,11 @@ from Src.Models.storage_model import storage_model
 from Src.Models.company_model import company_model
 from Src.Models.receipt_item_model import receipt_item_model
 from Src.Models.receipt_model import receipt_model
-from Src.Models.settings_model import settings_model
 from Src.Models.nomenclature_model import nomenclature_model
+from Src.start_service import start_service
+
+service = start_service()
+service.start()
 
 class TestDataFileGeneration(unittest.TestCase):
     # Создание папки для сохранения, создания фабрики
@@ -23,31 +26,23 @@ class TestDataFileGeneration(unittest.TestCase):
         with open(os.path.join(self.output_dir, filename), 'w', encoding='utf-8') as f:
             f.write(content)
 
-    # Функция создания разных моделей
-    def create_group(self):
-        return group_model.create("test")
+    # Функция получения разных моделей
+    def get_group(self):
+        groups = service.get_groups()
+        # Возьмем первый или нужный элемент, если нужно именно один
+        return groups[0] if groups else None
 
-    def create_range(self):
-        base_range = range_model.create("test_base_range", 5)
-        return range_model.create("test_range", 10, base_range)
+    def get_range(self):
+        ranges = service.get_ranges()
+        return ranges[0] if ranges else None
 
-    def create_storage(self):
-        return storage_model.create("test_storage")
+    def get_receipt(self):
+        receipts = service.get_receipts()
+        return receipts[0] if receipts else None
 
-    def create_company(self):
-        return company_model.create("test_company")
-
-    def create_receipt_item(self):
-        # Нужно соответствие параметров метода create
-        return receipt_item_model.create("test_item", 10, 5)
-
-    def create_receipt(self):
-        return receipt_model.create("test_receipt", "some time", 10)
-
-    def create_nomenclature(self):
-        test_range = range_model.create("test_base_range", 5)
-        test_group = group_model.create("test")
-        return nomenclature_model.create("test_nomenclature", test_group, test_range)
+    def get_nomenclature(self):
+        nomenclatures = service.get_nomenclatures()
+        return nomenclatures[0] if nomenclatures else None
 
 
     # Создаём ответы и сохраняем их в файлы
@@ -55,8 +50,7 @@ class TestDataFileGeneration(unittest.TestCase):
         data = [create_func()]
 
         for format in [response_formats.csv(), response_formats.json(), response_formats.md(), response_formats.xml()]:
-            self.factory.format = format
-            content = self.factory.create_default(data)
+            content = self.factory.create_default(format, data)
             extension = format
             file_name = f"{model_name}.{extension}"
             self.save_response_to_file(file_name, content)
@@ -66,13 +60,10 @@ class TestDataFileGeneration(unittest.TestCase):
     # Проверка создания фалов каждой модели
     def test_generate_all_files(self):
         model_creators = {
-            "groups": self.create_group,
-            "ranges": self.create_range,
-            "storages": self.create_storage,
-            "companies": self.create_company,
-            "receipt_items": self.create_receipt_item,
-            "receipts": self.create_receipt,
-            "nomenclatures": self.create_nomenclature,
+            "groups": self.get_group,
+            "ranges": self.get_range,
+            "receipts": self.get_receipt,
+            "nomenclatures": self.get_nomenclature,
         }
 
         for model_name, create_func in model_creators.items():

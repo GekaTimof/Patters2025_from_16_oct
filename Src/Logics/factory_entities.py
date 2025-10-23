@@ -21,30 +21,6 @@ class factory_entities:
         response_formats.xml(): response_xml
     }
 
-    # @property
-    # def format(self) -> str:
-    #     return self.__format
-    #
-    # @format.setter
-    # def format(self, value: str):
-    #     validator.validate(value, str)
-    #     self.__format = value
-    #
-
-    # # Получить нужный тип
-    # def create(self, format:str) -> abstract_response:
-    #     if format not in self.__match.keys():
-    #         raise operation_exception("Формат не верный")
-    #
-    #     return self.__match[ format ]
-    #
-    # # создать response заданного типа
-    # def create_default(self, data: list):
-    #     # Создаем нужный класс в зависимости от сохраненного формата
-    #     response_cls = self.create(self.format)
-    #     response_instance = response_cls()
-    #     return response_instance.create(self.format, data)
-
     # Возвращаем нужный инстанс класса
     def create(self, format: str) -> abstract_response:
         cls = self.__match.get(format)
