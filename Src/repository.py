@@ -1,4 +1,3 @@
-from Src.Core.common import common
 
 """
 Репозиторий данных

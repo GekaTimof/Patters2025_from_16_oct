@@ -8,7 +8,7 @@ from Src.Dtos.range_dto import range_dto
 class range_model(entity_model):
     __value:int = 1
     __base:'range_model' = None
-
+    __dto_type = range_dto
     """
     Значение коэффициента пересчета
     """
