@@ -66,10 +66,13 @@ class start_service:
                 settings = json.load(file_instance)
 
                 if reposity.receipts_key() in settings.keys():
-                    data = settings[reposity.receipts_key()]
-                    return self.convert(data)
-
-            return False
+                    # получаем список рецептов
+                    receipts = settings[reposity.receipts_key()]
+                    # конвертируем все рецепты
+                    for receipt in receipts:
+                        if not self.convert(receipt):
+                            return False
+                return True
         except Exception as e:
             error_message = str(e)
             print(error_message)
