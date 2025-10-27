@@ -72,12 +72,13 @@ class start_service:
             return False
         except Exception as e:
             error_message = str(e)
+            print(error_message)
             return False
-        
+
     # Сохранить элемент в репозитории
     def __save_item(self, key:str, dto, item):
         validator.validate(key, str)
-        item.unique_code = dto.id
+        item.id = dto.id
         self.__cache.setdefault(dto.id, item)
         self.__repo.data[ key ].append(item)
 

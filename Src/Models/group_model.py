@@ -14,7 +14,7 @@ class group_model(entity_model):
     def from_dto(dto:abstact_dto, cache:dict):
         item  = group_model()
         item.name = dto.name
-        item.unique_code = dto.id
+        item.id = dto.id
         return item
 
 

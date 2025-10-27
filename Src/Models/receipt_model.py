@@ -1,20 +1,18 @@
 from Src.Core.entity_model import entity_model
 from Src.Core.validator import validator
+from Src.Core.abstract_dto import abstact_dto
 
 # Модель рецепта
 class receipt_model(entity_model):
     # Количество порций
     __portions:int = 1
-
     # Шаги приготовления
     __steps:list = []
-
     # Состав
     __receipt_items:list = []
-
     # Время приготовления
     __cooking_time:str = ""
-
+    __dto_type = abstact_dto
 
     # Количество порций
     @property

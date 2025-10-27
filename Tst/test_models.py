@@ -89,9 +89,9 @@ class test_models(unittest.TestCase):
         # Подготовка
         id = uuid.uuid4().hex
         storage1 = storage_model()
-        storage1.unique_code = id
+        storage1.id = id
         storage2 = storage_model()   
-        storage2.unique_code = id
+        storage2.id = id
 
         # Действие 
 
@@ -103,9 +103,9 @@ class test_models(unittest.TestCase):
         # Подготовка
         id = uuid.uuid4().hex
         item1 = nomenclature_model()
-        item1.unique_code = id
+        item1.id = id
         item2 = nomenclature_model()
-        item2.unique_code = id
+        item2.id = id
 
         # Действие
 

@@ -27,7 +27,7 @@ class test_start(unittest.TestCase):
         # Проверка
         gramm =  list(filter(lambda x: x.name == "Грамм", start.data[ reposity.ranges_key()]))
         kg =  list(filter(lambda x: x.name == "Киллограмм", start.data[ reposity.ranges_key()]))
-        assert gramm[0].unique_code == kg[0].base.unique_code
+        assert gramm[0].id == kg[0].base.id
 
 
     # Проверить метод keys класса reposity

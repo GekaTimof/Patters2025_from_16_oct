@@ -8,8 +8,8 @@ from Src.Core.abstract_dto import abstact_dto
 #                "id":"0c101a7e-5934-4155-83a6-d2c388fcc11a"
 
 class nomenclature_dto(abstact_dto):
-    __range_id:str = ""
-    __group_id:str = ""
+    __range_id: str = ""
+    __group_id: str = ""
 
 
     @property
@@ -27,3 +27,4 @@ class nomenclature_dto(abstact_dto):
     @group_id.setter
     def group_id(self, value):
         self.__group_id = value
+

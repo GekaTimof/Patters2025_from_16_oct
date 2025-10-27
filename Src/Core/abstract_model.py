@@ -7,23 +7,23 @@ from Src.Core.validator import validator
 Содержит в себе только генерацию уникального кода
 """
 class abstact_model(ABC):
-    __unique_code: str
+    __id: str
 
     def __init__(self) -> None:
         super().__init__()
-        self.__unique_code = uuid.uuid4().hex
+        self.__id = uuid.uuid4().hex
 
     """
     Уникальный код
     """
     @property
-    def unique_code(self) -> str:
-        return self.__unique_code
+    def id(self) -> str:
+        return self.__id
     
-    @unique_code.setter
-    def unique_code(self, value: str):
+    @id.setter
+    def id(self, value: str):
         validator.validate(value, str)
-        self.__unique_code = value.strip()
+        self.__id = value.strip()
 
     """
     Перегрузка штатного варианта сравнения
@@ -32,5 +32,5 @@ class abstact_model(ABC):
         if value is  None: return False
         if not isinstance(value, abstact_model): return False
 
-        return self.unique_code == value.unique_code
+        return self.id == value.id
 

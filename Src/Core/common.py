@@ -1,5 +1,4 @@
 from Src.Core.entity_model import entity_model
-from Src.Core.abstract_model import abstact_model
 from Src.Core.validator import argument_exception
 
 # Набор статических общих методов

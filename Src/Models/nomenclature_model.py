@@ -5,7 +5,6 @@ from Src.Core.validator import validator
 from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.repository import reposity
 
-
 """
 Модель номенклатуры
 """
