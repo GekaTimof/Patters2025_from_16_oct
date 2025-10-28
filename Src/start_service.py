@@ -210,7 +210,3 @@ class start_service:
     """
     def stop(self):
         self.save_settings_to_file()
-
-service = start_service()
-service.start()
-service.stop()
