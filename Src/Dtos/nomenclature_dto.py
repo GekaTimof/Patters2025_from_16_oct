@@ -1,4 +1,5 @@
 from Src.Core.abstract_dto import abstact_dto
+from Src.Core.common import common
 
 # Модель номенклатуры (dto)
 # Пример
@@ -8,8 +9,8 @@ from Src.Core.abstract_dto import abstact_dto
 #                "id":"0c101a7e-5934-4155-83a6-d2c388fcc11a"
 
 class nomenclature_dto(abstact_dto):
-    __range_id:str = ""
-    __group_id:str = ""
+    __range_id: str = ""
+    __group_id: str = ""
 
 
     @property
@@ -27,3 +28,12 @@ class nomenclature_dto(abstact_dto):
     @group_id.setter
     def group_id(self, value):
         self.__group_id = value
+
+    # # конвертация dto в dict
+    # def to_dict(self) -> dict:
+    #   _dict = {}
+    #   fields = common.get_fields(self)
+    #   for field in fields:
+    #      value = getattr(self, field, None)
+    #      _dict[field] = value
+    #   return _dict

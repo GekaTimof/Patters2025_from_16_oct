@@ -4,12 +4,17 @@ from Src.Models.range_model import range_model
 from Src.Core.validator import validator
 from Src.Dtos.receipt_item_dto import receipt_item_dto
 
-
 # Модель элемента рецепта
 class receipt_item_model(abstact_model):
-    __nomenclature:nomenclature_model
-    __range:range_model
-    __value:int
+    __nomenclature: nomenclature_model
+    __range: range_model
+    __value: int
+    __dto_type = receipt_item_dto
+
+    # подходящий тип dto
+    @property
+    def dto_type(self) -> receipt_item_dto:
+        return self.__dto_type
 
     # Номенклатура
     @property
@@ -55,5 +60,7 @@ class receipt_item_model(abstact_model):
     def from_dto(dto:receipt_item_dto, cache:dict):
         validator.validate(dto, receipt_item_dto)
         validator.validate(cache, dict)
-        item = receipt_item_model.create(dto.nomenclature,dto.range, dto.value)
+        nomenclature = cache[dto.nomenclature_id] if dto.nomenclature_id in cache else None
+        range = cache[dto.range_id] if dto.range_id in cache else None
+        item = receipt_item_model.create(nomenclature, range, dto.value)
         return item
