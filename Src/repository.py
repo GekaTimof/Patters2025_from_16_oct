@@ -1,4 +1,3 @@
-from Src.Core.common import common
 
 """
 Репозиторий данных
@@ -6,6 +5,7 @@ from Src.Core.common import common
 class reposity:
     __data = {}
 
+    # все данные компании хранящиеся в репозиории в виде массивов моделей
     @property
     def data(self):
         return self.__data
@@ -17,14 +17,12 @@ class reposity:
     def ranges_key():
         return "ranges"
 
-
     """
     Ключ для категорий
     """
     @staticmethod
     def groups_key():
         return "groups"
-    
 
     """
     Ключ для номенклатуры

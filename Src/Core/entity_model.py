@@ -1,6 +1,6 @@
 from Src.Core.abstract_model import abstact_model
 from Src.Core.validator import validator
-
+from Src.Core.validator import convertation_exception
 
 """
 Общий класс для наследования. Содержит стандартное определение: код, наименование
@@ -25,5 +25,3 @@ class entity_model(abstact_model):
         item = entity_model()
         item.name = name
         return item
-    
-  
