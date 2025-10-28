@@ -58,6 +58,13 @@ class start_service:
         else:
             raise argument_exception(f'Не найден файл настроек {full_file_name}')
 
+    # Текущая конфигурация
+    def settings(self) -> str:
+        factory = convert_factory()
+        settings_json = factory.create_json_settings(self)
+        return settings_json
+
+
     # Загрузить настройки из Json файла
     def load(self) -> bool:
         if self.__full_file_name == "":
@@ -190,8 +197,7 @@ class start_service:
 
     # метод сохранения сервиса в файл
     def save_settings_to_file(self):
-        factory = convert_factory()
-        settings_json = factory.create_json_settings(self)
+        settings_json = self.settings()
 
         # Открываем файл для записи в текстовом режиме с нужной кодировкой
         with open("settings_my.json", "w", encoding="utf-8") as f:
