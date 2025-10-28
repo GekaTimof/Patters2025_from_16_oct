@@ -9,7 +9,7 @@ from Src.Models.receipt_model import receipt_model
 from Src.Models.receipt_item_model import receipt_item_model
 from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.Dtos.range_dto import range_dto
-from Src.Dtos.category_dto import category_dto
+from Src.Dtos.group_dto import group_dto
 from Src.Dtos.receipt_item_dto import receipt_item_dto
 from Src.Logics.convert_factory import convert_factory
 
@@ -22,7 +22,7 @@ class start_service:
     __cache = {}
 
     # Наименование файла (полный путь)
-    __full_file_name:str = "settings.json"
+    __full_file_name:str = "settings_old.json"
 
     def __init__(self):
         self.__repo.initalize()
@@ -126,12 +126,12 @@ class start_service:
     # Загрузить группы номенклатуры
     def __convert_groups(self, data: dict) -> bool:
         validator.validate(data, dict)
-        categories =  data[reposity.groups_key()] if reposity.groups_key() in data else []
-        if len(categories) == 0:
+        groups =  data[reposity.groups_key()] if reposity.groups_key() in data else []
+        if len(groups) == 0:
             return False
 
-        for category in categories:
-            dto = category_dto().create(category)    
+        for group in groups:
+            dto = group_dto().create(group)
             item = group_model.from_dto(dto, self.__cache )
             self.__save_item( reposity.groups_key(), dto, item )
 
@@ -160,8 +160,8 @@ class start_service:
         cooking_time = data['cooking_time'] if 'cooking_time' in data else ""
         portions = int(data['portions']) if 'portions' in data else 0
         name = data['name'] if 'name' in data else "НЕ ИЗВЕСТНО"
-        # self.__default_receipt = receipt_model.create(name, cooking_time, portions)
-        receipt: receipt_model = receipt_model.create(name, cooking_time, portions)
+        id = data['id'] if 'id' in data else None
+        receipt: receipt_model = receipt_model.create(id, name, cooking_time, portions)
 
         # Загрузим шаги приготовления
         steps =  data['steps'] if 'steps' in data else []
@@ -201,6 +201,13 @@ class start_service:
     def data(self):
         return self.__repo.data   
 
+    # метод сохранения сервиса в файл
+    def save_settings_to_file(self):
+        settings_json = self.settings()
+
+        # Открываем файл для записи в текстовом режиме с нужной кодировкой
+        with open("settings_my.json", "w", encoding="utf-8") as f:
+            f.write(settings_json)
 
     """
     Основной метод для генерации эталонных данных
