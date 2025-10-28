@@ -13,7 +13,7 @@ response_formats_arr = response_formats.all_formats()
 
 # создаём и запускаем сервис
 service = start_service()
-service.filename = "settings.json"
+service.file_name = "settings.json"
 try:
     service.start()
 except Exception as e:

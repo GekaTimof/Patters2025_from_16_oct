@@ -10,6 +10,8 @@ from Src.Models.receipt_item_model import receipt_item_model
 from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.Dtos.range_dto import range_dto
 from Src.Dtos.category_dto import category_dto
+from Src.Dtos.receipt_item_dto import receipt_item_dto
+from Src.Logics.convert_factory import convert_factory
 
 class start_service:
     # Репозиторий
@@ -39,7 +41,7 @@ class start_service:
     # получить рапозиторий целиком
     @property
     def repository(self):
-        return self.__repo.data
+        return self.__repo
 
     # Текущий файл
     @property
@@ -61,22 +63,26 @@ class start_service:
         if self.__full_file_name == "":
             raise operation_exception("Не найден файл настроек!")
 
-        try:
-            with open( self.__full_file_name, 'r') as file_instance:
-                settings = json.load(file_instance)
+        # try:
+        with open( self.__full_file_name, 'r') as file_instance:
+            settings = json.load(file_instance)
 
-                if reposity.receipts_key() in settings.keys():
-                    # получаем список рецептов
-                    receipts = settings[reposity.receipts_key()]
-                    # конвертируем все рецепты
-                    for receipt in receipts:
-                        if not self.convert(receipt):
-                            return False
-                return True
-        except Exception as e:
-            error_message = str(e)
-            print(error_message)
-            return False
+            # получаем данные о компании
+            # ***
+
+            # получаем рецепты
+            if reposity.receipts_key() in settings.keys():
+                # получаем список рецептов
+                receipts = settings[reposity.receipts_key()]
+                # конвертируем все рецепты
+                for receipt in receipts:
+                    if not self.convert(receipt):
+                        return False
+            return True
+        # except Exception as e:
+        #     error_message = str(e)
+        #     print(error_message)
+        #     return False
 
     # Сохранить элемент в репозитории
     def __save_item(self, key:str, dto, item):
@@ -135,7 +141,7 @@ class start_service:
         # 1 Созданим рецепт
         cooking_time = data['cooking_time'] if 'cooking_time' in data else ""
         portions = int(data['portions']) if 'portions' in data else 0
-        name =  data['name'] if 'name' in data else "НЕ ИЗВЕСТНО"
+        name = data['name'] if 'name' in data else "НЕ ИЗВЕСТНО"
         # self.__default_receipt = receipt_model.create(name, cooking_time, portions)
         receipt: receipt_model = receipt_model.create(name, cooking_time, portions)
 
@@ -144,6 +150,13 @@ class start_service:
         for step in steps:
             if step.strip() != "":
                 receipt.steps.append( step )
+
+        # Загрузим ингридиенты
+        receipt_items = data['receipt_items'] if 'receipt_items' in data else []
+        for receipt_item in receipt_items:
+            dto = receipt_item_dto().create(receipt_item)
+            item = receipt_item_model.from_dto(dto, self.__cache)
+            receipt.receipt_items.append(item)
 
         self.__convert_ranges(data)
         self.__convert_groups(data)
@@ -175,6 +188,16 @@ class start_service:
     def data(self):
         return self.__repo.data   
 
+    # метод сохранения сервиса в файл
+    def save_settings_to_file(self):
+        factory = convert_factory()
+        settings_json = factory.create_json_settings(self)
+
+        # Открываем файл для записи в текстовом режиме с нужной кодировкой
+        with open("settings_my.json", "w", encoding="utf-8") as f:
+            f.write(settings_json)
+
+
     """
     Основной метод для генерации эталонных данных
     """
@@ -188,6 +211,9 @@ class start_service:
     Основной метод для отключения сервера и сохранения данных из репозитория
     """
     def stop(self):
-        #save_service_to_file(self.__repo.data)
-        pass
+        self.save_settings_to_file()
 
+
+service = start_service()
+service.start()
+service.stop()

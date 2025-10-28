@@ -4,6 +4,7 @@ from Src.Models.range_model import range_model
 from Src.Core.validator import validator
 from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.repository import reposity
+from Src.Core.abstract_dto import abstact_dto
 
 """
 Модель номенклатуры
@@ -13,6 +14,10 @@ class nomenclature_model(entity_model):
     __range: range_model = None
     __dto_type = nomenclature_dto
 
+    # подходящий тип dto
+    @property
+    def dto_type(self) -> nomenclature_dto :
+        return self.__dto_type
 
     """
     Группа номенклатуры

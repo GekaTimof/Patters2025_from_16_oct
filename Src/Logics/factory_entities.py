@@ -4,7 +4,6 @@ from Src.Logics.response_md import response_md
 from Src.Logics.response_xml import response_xml
 from Src.Logics.response_json import response_json
 from Src.Core.response_format import response_formats
-from Src.Core.validator import validator
 
 class factory_entities:
     # текущий формат

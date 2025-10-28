@@ -40,3 +40,19 @@ class common:
                 result.append(item)
 
         return result
+
+    """
+    Получить полный список наследников класса
+    {name: obj}
+    """
+
+    def get_all_subclasses_dict(cls):
+        subclasses = {}
+        work = [cls]
+        while work:
+            parent = work.pop()
+            for subclass in parent.__subclasses__():
+                if subclass.__name__ not in subclasses:
+                    subclasses[subclass.__name__] = subclass
+                    work.append(subclass)
+        return subclasses
