@@ -1,20 +1,26 @@
 from Src.Core.entity_model import entity_model
 from Src.Core.validator import validator
+from Src.Core.abstract_dto import abstact_dto
+from Src.Dtos.receipt_dto import receipt_dto
 
 # Модель рецепта
 class receipt_model(entity_model):
     # Количество порций
     __portions:int = 1
-
     # Шаги приготовления
     __steps:list = []
-
-    # Состав
+    # Список ингридиентов
     __receipt_items:list = []
-
     # Время приготовления
     __cooking_time:str = ""
+    # Соответствующий dto
+    __dto_type = receipt_dto
 
+
+    # Подходящий тип dto
+    @property
+    def dto_type(self) -> receipt_dto:
+        return self.__dto_type
 
     # Количество порций
     @property
@@ -35,7 +41,12 @@ class receipt_model(entity_model):
     @property
     def receipt_items(self) -> list:
         return self.__receipt_items
-    
+
+    @receipt_items.setter
+    def receipt_items(self, value: list):
+        validator.validate(self, list)
+        self.__receipt_items = value
+
     # Время приготовления
     @property
     def cooking_time(self) -> str:

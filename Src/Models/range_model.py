@@ -1,6 +1,7 @@
 from Src.Core.entity_model import entity_model
 from Src.Core.validator import validator, argument_exception
 from Src.Dtos.range_dto import range_dto
+from Src.Core.abstract_dto import abstact_dto
 
 """
 Модель единицы измерения
@@ -8,6 +9,12 @@ from Src.Dtos.range_dto import range_dto
 class range_model(entity_model):
     __value:int = 1
     __base:'range_model' = None
+    __dto_type = range_dto
+
+    # подходящий тип dto
+    @property
+    def dto_type(self) -> abstact_dto:
+        return self.__dto_type
 
     """
     Значение коэффициента пересчета

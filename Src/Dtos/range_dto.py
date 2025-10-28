@@ -1,4 +1,5 @@
 from Src.Core.abstract_dto import abstact_dto
+from Src.Core.common import common
 
 # Модель единицы измерения (dto)
 # Пример
@@ -7,8 +8,8 @@ from Src.Core.abstract_dto import abstact_dto
 #                "base_id":null,
 #                "value":1
 class range_dto(abstact_dto):
-    __base_id:str = None
-    __value:int = 1
+    __base_id: str = None
+    __value: int = 1
 
     @property
     def base_id(self) -> str:
@@ -25,3 +26,12 @@ class range_dto(abstact_dto):
     @value.setter
     def value(self, value):
         self.__value = value
+
+    # # конвертация dto в dict
+    # def to_dict(self) -> dict:
+    #     _dict = {}
+    #     fields = common.get_fields(self)
+    #     for field in fields:
+    #         value = getattr(self, field, None)
+    #         _dict[field] = value
+    #     return _dict
