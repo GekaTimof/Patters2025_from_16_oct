@@ -8,16 +8,22 @@ class convert_factory:
         # Словарь {имя_класса: класс-наследник abstact_dto}
         self.dto_classes = common.get_all_subclasses_dict(abstact_dto)
 
-    # Возвращает json нужной модели
-    def create(self, dto):
-        class_name = dto.__class__.__name__
-        if class_name not in self.dto_classes:
-            raise ValueError(f"Неизвестный тип DTO: {class_name}")
-        # Вызываем метод to_json конкретного экземпляра
-        return dto.to_dict()
+    # Возвращает dto соответствующее объекту
+    def create(self, obj) -> abstact_dto:
+        if "dto_type" in common.get_fields(obj):
+            class_name = obj.dto_type.__name__
+            print(class_name)
+            print(self.dto_classes)
+            # проверяем, что класс наследован от abstact_dto
+            if class_name not in self.dto_classes.keys():
+                raise ValueError(f"Неизвестный тип DTO: {class_name}")
+            # создаём dto
+            return obj.to_dto()
+        else:
+            raise ValueError(f"Объект не имеет метода конвертации в dto")
 
-    # Возвращает response в формате json описание всего сервиса
-    def create_dict_repository(self, repository):
+    # Возвращает response в формате dict описание всего сервиса
+    def create_dict_repository(self, repository) -> dict:
         result_dict = {}
         repository_keys = repository.keys()
 
@@ -28,12 +34,12 @@ class convert_factory:
             for obj in objects_list:
                 # преобразовываем объекты, которые можно преобразовать в dto
                 if "dto_type" in common.get_fields(obj):
-                    dto = obj.to_dto()
-                    filtered_list.append(self.create(dto))
+                    dto = self.create(obj)
+                    filtered_list.append(dto.to_dict())
             result_dict[key] = filtered_list
         return result_dict
 
-    def create_json_settings(self, service):
+    def create_json_settings(self, service) -> str:
         result_json = {}
         result_json["is_firs_start"] = False
         result_json["company"] = {}
