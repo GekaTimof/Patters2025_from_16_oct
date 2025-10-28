@@ -1,4 +1,3 @@
-
 """
 Репозиторий данных
 """
@@ -9,7 +8,7 @@ class reposity:
     @property
     def data(self):
         return self.__data
-    
+
     """
     Ключ для единц измерений
     """
@@ -30,7 +29,6 @@ class reposity:
     @staticmethod
     def nomenclatures_key():
         return "nomenclatures"
-    
 
     """
     Ключ для рецептов
@@ -38,7 +36,7 @@ class reposity:
     @staticmethod
     def receipts_key():
         return "receipts"
-    
+
     """
     Получить список всех ключей
     """
@@ -46,20 +44,17 @@ class reposity:
     def keys() -> list:
         result = []
         methods = [method for method in dir(reposity) if
-                    callable(getattr(reposity, method)) and method.endswith('_key')]
+            callable(getattr(reposity, method)) and method.endswith('_key')]
         for method in methods:
             key = getattr(reposity, method)()
             result.append(key)
 
         return result
 
-    
     """
     Инициализация
     """
     def initalize(self):
         keys = reposity.keys()
         for key in keys:
-            self.__data[ key ] = []
-    
-    
+            self.__data[key] = []

@@ -23,5 +23,3 @@ class response_csv(abstract_response):
             text += "\t".join(values) + "\n"
 
         return text
-
-

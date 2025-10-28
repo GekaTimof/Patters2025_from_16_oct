@@ -1,6 +1,7 @@
 from Src.Models.company_model import company_model
 from Src.Core.validator import validator
 
+
 ######################################
 # Модель настроек приложения
 class settings_model:
@@ -10,10 +11,9 @@ class settings_model:
     @property
     def company(self) -> company_model:
         return self.__company
-    
+
     @company.setter
     def company(self, value: company_model):
         validator.validate(value, company_model)
         self.__company = value
-
 
