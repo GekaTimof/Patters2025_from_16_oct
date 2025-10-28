@@ -37,4 +37,3 @@ class test_to_dto(unittest.TestCase):
                 raise AssertionError(f"В DTO есть поле '{field}', отсутствующее в объекте")
 
 
-
