@@ -16,7 +16,7 @@ factory = convert_factory()
 
 # создаём и запускаем сервис
 service = start_service()
-service.file_name = "settings.json"
+service.file_name = "settings_old.json"
 try:
     service.start()
 except Exception as e:

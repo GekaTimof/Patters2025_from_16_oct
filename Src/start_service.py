@@ -22,7 +22,7 @@ class start_service:
     __cache = {}
 
     # Наименование файла (полный путь)
-    __full_file_name:str = ""
+    __full_file_name:str = "settings.json"
 
     def __init__(self):
         self.__repo.initalize()
@@ -224,8 +224,8 @@ class start_service:
     def stop(self):
         self.save_settings_to_file()
 
-
-service = start_service()
-service.file_name = "settings_my2.json"
-service.start()
-service.stop()
+#
+# service = start_service()
+# service.file_name = "settings_my2.json"
+# service.start()
+# service.stop()
