@@ -77,15 +77,26 @@ class start_service:
             # получаем данные о компании
             # ***
 
+            # пролучаем repository
+            repository = settings["repository"]
+
+            # получаем общие данные
+            self.__convert_ranges(repository)
+            self.__convert_groups(repository)
+            self.__convert_nomenclatures(repository)
+
             # получаем рецепты
-            if reposity.receipts_key() in settings.keys():
+            if reposity.receipts_key() in repository.keys():
+
                 # получаем список рецептов
-                receipts = settings[reposity.receipts_key()]
+                receipts = repository[reposity.receipts_key()]
                 # конвертируем все рецепты
                 for receipt in receipts:
                     if not self.convert(receipt):
                         return False
-            return True
+                return True
+            else:
+                return False
         # except Exception as e:
         #     error_message = str(e)
         #     print(error_message)
@@ -165,11 +176,6 @@ class start_service:
             item = receipt_item_model.from_dto(dto, self.__cache)
             receipt.receipt_items.append(item)
 
-        self.__convert_ranges(data)
-        self.__convert_groups(data)
-        self.__convert_nomenclatures(data)
-
-
         # Собираем рецепт
         receipt_items =  data['receipt_items'] if 'receipt_items' in data else []
         if len(receipt_items) == 0:
@@ -208,7 +214,6 @@ class start_service:
     Основной метод для генерации эталонных данных
     """
     def start(self):
-        self.file_name = "settings.json"
         result = self.load()
         if result == False:
             raise operation_exception("Невозможно сформировать стартовый набор данных!")
@@ -221,5 +226,6 @@ class start_service:
 
 
 service = start_service()
+service.file_name = "settings_my2.json"
 service.start()
 service.stop()
