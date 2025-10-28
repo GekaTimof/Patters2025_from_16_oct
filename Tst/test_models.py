@@ -36,7 +36,7 @@ class test_models(unittest.TestCase):
     # Данные загружаем через json настройки
     def test_json_load_createmodel_companymodel(self):
         # Подготовка
-       file_name = "settings.json"
+       file_name = "settings_old.json"
        manager = settings_manager()
        manager.file_name = file_name
        
@@ -68,7 +68,7 @@ class test_models(unittest.TestCase):
     # Данные загружаем. Проверяем работу Singletone
     def test_loadCombo_createmodel_companymodel(self):
         # Подготовка
-        file_name = "settings.json"
+        file_name = "settings_old.json"
         manager1 = settings_manager()
         manager1.file_name = file_name
         manager2 = settings_manager()
@@ -89,9 +89,9 @@ class test_models(unittest.TestCase):
         # Подготовка
         id = uuid.uuid4().hex
         storage1 = storage_model()
-        storage1.unique_code = id
+        storage1.id = id
         storage2 = storage_model()   
-        storage2.unique_code = id
+        storage2.id = id
 
         # Действие 
 
@@ -103,9 +103,9 @@ class test_models(unittest.TestCase):
         # Подготовка
         id = uuid.uuid4().hex
         item1 = nomenclature_model()
-        item1.unique_code = id
+        item1.id = id
         item2 = nomenclature_model()
-        item2.unique_code = id
+        item2.id = id
 
         # Действие
 

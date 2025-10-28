@@ -10,7 +10,13 @@ class argument_exception(Exception):
 """  
 class operation_exception(Exception):
     pass    
-    
+
+"""
+Исключение при выполнении бизнес операции
+"""
+class convertation_exception(Exception):
+    pass
+
 
 """
 Набор проверок данных
