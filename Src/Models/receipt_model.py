@@ -68,3 +68,7 @@ class receipt_model(entity_model):
         item.cooking_time = cooking_time
         item.portions = portions
         return item
+
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

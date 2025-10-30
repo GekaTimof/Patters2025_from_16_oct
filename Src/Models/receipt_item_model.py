@@ -64,3 +64,7 @@ class receipt_item_model(abstact_model):
         range = cache[dto.range_id] if dto.range_id in cache else None
         item = receipt_item_model.create(nomenclature, range, dto.value)
         return item
+
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

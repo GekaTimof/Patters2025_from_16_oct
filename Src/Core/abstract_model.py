@@ -1,3 +1,4 @@
+import abc
 from abc import ABC
 import uuid
 from Src.Core.validator import validator
@@ -40,6 +41,7 @@ class abstact_model(ABC):
         return self.id == value.id
 
     # Перевод в dto
+    @abc.abstractmethod
     def to_dto(self):
         # Избегаем паралельный импорт
         from Src.Core.common import common
