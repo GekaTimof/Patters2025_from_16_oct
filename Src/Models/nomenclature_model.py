@@ -3,8 +3,8 @@ from Src.Models.group_model import group_model
 from Src.Models.range_model import range_model
 from Src.Core.validator import validator
 from Src.Dtos.nomenclature_dto import nomenclature_dto
-from Src.reposity import reposity
-
+from Src.repository import reposity
+from Src.Core.abstract_dto import abstact_dto
 
 """
 Модель номенклатуры
@@ -12,8 +12,13 @@ from Src.reposity import reposity
 class nomenclature_model(entity_model):
     __group: group_model = None
     __range: range_model = None
+    __dto_type = nomenclature_dto
 
-   
+    # подходящий тип dto
+    @property
+    def dto_type(self) -> nomenclature_dto:
+        return self.__dto_type
+
     """
     Группа номенклатуры
     """
@@ -23,8 +28,8 @@ class nomenclature_model(entity_model):
 
     @group.setter
     def group(self, value: group_model):
-        validator.validate(value,entity_model )
-        self.__group = value    
+        validator.validate(value, group_model)
+        self.__group = value
 
     """
     Единица измерения
@@ -32,33 +37,36 @@ class nomenclature_model(entity_model):
     @property
     def range(self) -> range_model:
         return self.__range
-    
+
     @range.setter
     def range(self, value: range_model):
         validator.validate(value, range_model)
         self.__range = value
 
-
     """
     Универсальный фабричный метод
     """
-    def create(name:str, group:group_model, range:range_model):
+    @staticmethod
+    def create(name: str, group: group_model, range: range_model):
         validator.validate(name, str)
         item = nomenclature_model()
         item.name = name
         item.group = group
         item.range = range
         return item
-    
+
     """
     Фабричный метод из Dto
     """
-    def from_dto(dto:nomenclature_dto, cache:dict):
+    @staticmethod
+    def from_dto(dto: nomenclature_dto, cache: dict):
         validator.validate(dto, nomenclature_dto)
         validator.validate(cache, dict)
-        range = cache[ dto.range_id ] if dto.range_id in cache else None
-        category = cache[ dto.category_id] if dto.category_id in cache else None
-        item = nomenclature_model.create(dto.name, category, range)
+        range = cache[dto.range_id] if dto.range_id in cache else None
+        group = cache[dto.group_id] if dto.group_id in cache else None
+        item = nomenclature_model.create(dto.name, group, range)
         return item
-        
-    
+
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

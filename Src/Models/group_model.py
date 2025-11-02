@@ -1,27 +1,28 @@
 from Src.Core.entity_model import entity_model
 from Src.Core.abstract_dto import abstact_dto
+from Src.Dtos.group_dto import group_dto
 
 """
 Модель группы номенклатуры
 """
 class group_model(entity_model):
-   
+    __dto_type = group_dto
+
+    # Подходящий тип dto
+    @property
+    def dto_type(self) -> abstact_dto:
+        return self.__dto_type
 
     """
     Фабричный метод из Dto
     """
     @staticmethod
-    def from_dto(dto:abstact_dto, cache:dict):
-        item  = group_model()
+    def from_dto(dto: abstact_dto, cache: dict):
+        item = group_model()
         item.name = dto.name
-        item.unique_code = dto.id
+        item.id = dto.id
         return item
 
-
-    
-    
-
-    
-
-
-    
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

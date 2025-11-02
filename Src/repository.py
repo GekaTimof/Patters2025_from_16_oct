@@ -1,68 +1,67 @@
-from Src.Core.common import common
-
 """
 Репозиторий данных
 """
 class reposity:
     __data = {}
 
+    # все данные компании хранящиеся в репозиории в виде массивов моделей
     @property
     def data(self):
         return self.__data
-    
+
     """
     Ключ для единц измерений
     """
     @staticmethod
-    def range_key():
-        return "range_model"
-    
+    def ranges_key():
+        return "ranges"
 
     """
     Ключ для категорий
     """
     @staticmethod
-    def group_key():
-        return "group_model"
-    
+    def groups_key():
+        return "groups"
 
     """
     Ключ для номенклатуры
     """
     @staticmethod
-    def nomenclature_key():
-        return "nomenclature_model"
-    
+    def nomenclatures_key():
+        return "nomenclatures"
 
     """
     Ключ для рецептов
     """
     @staticmethod
-    def receipt_key():
-        return "receipt_model"
-    
+    def receipts_key():
+        return "receipts"
+
+    """
+    Ключ для компонент рецептов
+    """
+    @staticmethod
+    def receipt_items_key():
+        return "receipt_items"
+
     """
     Получить список всех ключей
-    Источник: https://github.com/Alyona1619
     """
     @staticmethod
     def keys() -> list:
         result = []
         methods = [method for method in dir(reposity) if
-                    callable(getattr(reposity, method)) and method.endswith('_key')]
+            callable(getattr(reposity, method)) and method.endswith('_key')]
         for method in methods:
             key = getattr(reposity, method)()
             result.append(key)
 
         return result
 
-    
     """
     Инициализация
     """
     def initalize(self):
         keys = reposity.keys()
         for key in keys:
-            self.__data[ key ] = []
-    
-    
+            self.__data[key] = []

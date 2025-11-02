@@ -1,3 +1,5 @@
+*old.json
+
 # ---> Python
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -170,3 +172,10 @@ cython_debug/
 
 # Environment
 env_name/
+!/Tst/Responses/
+!/Tst/Responses/
+/Tst/Responses/
+!/Tst/settings_old.json
+!/Tst/settings_old.json
+!/settings_old.json
+!/settings_old.json
