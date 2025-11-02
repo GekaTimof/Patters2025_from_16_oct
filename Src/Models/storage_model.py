@@ -1,15 +1,15 @@
 from Src.Core.entity_model import entity_model
 from Src.Core.validator import validator
+from Src.Dtos.storage_dto import storage_dto
 
 """
 Модель склада
 """
 class storage_model(entity_model):
     __address: str = ""
+    __dto_type = storage_dto
 
-    """
-    Адрес
-    """
+    # Адрес
     @property
     def address(self) -> str:
         return self.__address.strip()

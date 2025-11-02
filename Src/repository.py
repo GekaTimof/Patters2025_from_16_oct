@@ -1,3 +1,5 @@
+from Src.Core.common import common
+
 """
 Репозиторий данных
 """
@@ -9,12 +11,14 @@ class reposity:
     def data(self):
         return self.__data
 
+
     """
     Ключ для единц измерений
     """
     @staticmethod
     def ranges_key():
         return "ranges"
+
 
     """
     Ключ для категорий
@@ -23,12 +27,14 @@ class reposity:
     def groups_key():
         return "groups"
 
+
     """
     Ключ для номенклатуры
     """
     @staticmethod
     def nomenclatures_key():
         return "nomenclatures"
+
 
     """
     Ключ для рецептов
@@ -37,12 +43,30 @@ class reposity:
     def receipts_key():
         return "receipts"
 
+
     """
     Ключ для компонент рецептов
     """
     @staticmethod
     def receipt_items_key():
         return "receipt_items"
+
+
+    """
+    Ключ для складов
+    """
+    @staticmethod
+    def storages_key():
+        return "storages"
+
+
+    """
+    Ключ для тразакций
+    """
+    @staticmethod
+    def transactions_key():
+        return "transactions"
+
 
     """
     Получить список всех ключей
@@ -58,10 +82,17 @@ class reposity:
 
         return result
 
-    """
-    Инициализация
-    """
-    def initalize(self):
+    # Инициализация
+    def initialize(self):
         keys = reposity.keys()
         for key in keys:
             self.__data[key] = []
+
+
+    # Получение элемента по его id
+    def get_by_id(self, _id: str):
+        for key in self.keys():
+            for elem in self.__data[key]:
+                if "id" == common.get_fields(elem) and elem.id == _id:
+                    return elem
+        return None
