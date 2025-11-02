@@ -21,10 +21,9 @@ class convert_factory:
             raise ValueError(f"Объект {obj} не имеет метода конвертации в dto")
 
     # Возвращает dict|list преобразованный в словарь
-    # TODO Сделать более универсально
     def create_dict_from_dto(self, data) -> dict|list:
         # если получен словарь (вернём словарь)
-        if type(data) == "dict":
+        if type(data) == dict:
             result = {}
             for key in data.keys():
                 # конвертирует только те объекты, у которых есть dto_type (их можно преобразовать в dto)
@@ -46,11 +45,3 @@ class convert_factory:
                     result.append(dto.to_dict())
 
         return result
-
-    # TODO отдельно
-    def create_json_settings(self, service) -> str:
-        result_json = {}
-        result_json["is_firs_start"] = False
-        result_json["company"] = {}
-        result_json["repository"] = self.create_dict_repository(service.repository.data)
-        return json.dumps(result_json, ensure_ascii=False, indent=2)

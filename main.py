@@ -11,8 +11,8 @@ app = FastAPI()
 
 # смписок всех доступных форматов
 response_formats_arr = response_formats.all_formats()
-
-factory = convert_factory()
+# фабрика перевода объектов в dict
+dict_factory = convert_factory()
 
 # создаём и запускаем сервис
 service = start_service()
@@ -65,9 +65,10 @@ def get_receipts():
 @app.get("/receipt/{receipt_id}")
 def get_receipt(receipt_id: str):
     # Ищем рецепт по id среди рецептов
-    for r in service.repository.data.get("receipts", []):
-        if getattr(r, "id", None) == receipt_id:
-            result_json = factory.create(r).to_dict()
+    for receipt in service.repository.data.get(service.repository.receipts_key(), []):
+        print(len(receipt.receipt_items))
+        if getattr(receipt, "id", None) == receipt_id:
+            result_json = dict_factory.create(receipt).to_dict()
             return JSONResponse(content=result_json)
     raise HTTPException(status_code=404, detail="Receipt not found")
 

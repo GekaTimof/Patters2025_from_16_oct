@@ -61,6 +61,8 @@ class abstact_model(ABC):
                 data = getattr(self, arg)
                 # если список, проходим по каждому элементу
                 if type(data) == list:
+                    # обнуляем список (воизбежения дублирования)
+                    setattr(dto, arg, [])
                     for item in data:
                         # Если объект является модель преобразуем в dto, а потом в dict
                         if common.can_convert_to_dto(item):
