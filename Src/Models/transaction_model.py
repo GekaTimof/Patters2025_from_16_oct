@@ -2,11 +2,11 @@ from Src.Core.entity_model import abstact_model
 from Src.Core.common import common
 from Src.Core.validator import validator
 from datetime import datetime
-
 from Src.Models.range_model import range_model
 from Src.Models.storage_model import storage_model
 from Src.Models.nomenclature_model import nomenclature_model
 from Src.Dtos.transaction_dto import transaction_dto
+from Src.repository import reposity
 
 # Модель транзакции
 # Пример
@@ -84,12 +84,10 @@ class transaction_model(abstact_model):
     Универсальный фабричный метод
     """
     @staticmethod
-    def create(_id: str, _date: datetime):
-        validator.validate(_id, str)
+    def create(_date: datetime):
         validator.validate(_date, datetime)
 
         item = transaction_model()
-        item.id = _id
         item.date = _date
         return item
 
@@ -97,15 +95,16 @@ class transaction_model(abstact_model):
     Фабричный метод из Dto
     """
     @staticmethod
-    def from_dto(dto: transaction_dto, repository: dict):
+    def from_dto(dto: transaction_dto, cache: dict):
         validator.validate(dto, transaction_dto)
-        validator.validate(repository, dict)
+        validator.validate(cache, dict)
 
-        item = transaction_model.create(dto.id, datetime.strptime(dto.date, "%Y-%m-%d %H:%M:%S"))
-        item.storage = common.find_by_id(repository, dto.storage_id)
-        item.nomenclature = common.find_by_id(repository, dto.nomenclature_id)
-        item.amount = dto.amount
-        item.range = common.find_by_id(repository, dto.range_id)
+        item = transaction_model.create(common.convert_to_date(dto.date))
+
+        item.storage = cache[dto.storage_id] if dto.storage_id in cache else None
+        item.nomenclature = cache[dto.nomenclature_id] if dto.nomenclature_id in cache else None
+        item.range = cache[dto.range_id] if dto.range_id in cache else None
+        item.amount = int(dto.amount)
 
         return item
 

@@ -5,12 +5,30 @@ from Src.Core.common import common
 """
 class reposity:
     __data = {}
+    # Словарь который содержит загруженные и инициализованные инстансы нужных объектов
+    # Ключ - id записи, значение - abstract_model
+    __cache = {}
 
     # все данные компании хранящиеся в репозиории в виде массивов моделей
     @property
     def data(self):
         return self.__data
 
+    # кэш хранить id и соответствующий ему элемент
+    @property
+    def cache(self):
+        return self.__cache
+
+    # добавление элемента в data, с добавлением этого же элемнта в cache
+    def add_item(self, key: str, item):
+        if key not in self.__data:
+            self.__data[key] = []
+        self.__data[key].append(item)
+
+        # Добавляем в кэш по id
+        item_id = getattr(item, "id", None)
+        if item_id is not None and item_id not in self.__cache:
+            self.__cache[item_id] = item
 
     """
     Ключ для единц измерений
