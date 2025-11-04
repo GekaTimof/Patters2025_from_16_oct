@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import PlainTextResponse, JSONResponse, HTMLResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 from enum import Enum
 from Src.Core.common import common
 from Src.Models.storage_model import storage_model
+from Src.Models.range_model import range_model
 from Src.Dtos.storage_dto import storage_dto
 from Src.Models.transaction_model import transaction_model
 from Src.Dtos.transaction_dto import transaction_dto
@@ -10,7 +11,9 @@ from Src.start_service import start_service
 from Src.Core.response_format import response_formats  # перечисление форматов
 from Src.Logics.factory_entities import factory_entities  # фабрика форматов
 from Src.Logics.convert_factory import convert_factory
-
+from Src.Dtos.osv_item_dto import osv_item_dto
+from Src.Core.validator import convertation_exception, operation_exception, argument_exception
+from fastapi import Request
 
 # иницилизация api
 app = FastAPI()
@@ -32,6 +35,15 @@ except Exception as e:
 repo_keys = service.repository.keys()
 # ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
 RepoKeyEnum = Enum('RepoKeyEnum', [(key, key) for key in repo_keys], type=str)
+
+
+# Обработчик моих ошибок — возвращает подробное сообщение с кодом 400
+@app.exception_handler(convertation_exception)
+async def convertation_exception_handler(request: Request, exc: convertation_exception|operation_exception|argument_exception):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(exc)}
+    )
 
 
 # Запрос для получения списка данных определённого типа из репозитория по ключу (в определённом формате)
@@ -83,47 +95,112 @@ def get_receipt(receipt_id: str):
     raise HTTPException(status_code=404, detail="Рецепт не найден")
 
 
-# Получить таблицу транзакций в данный период, на выбранном складе
-@app.get("/data/get/transactions_filtered", response_class=HTMLResponse)
-def get_transactions_filtered(
-    start_date: str = Query(..., description="Дата начала 'YYYY-MM-DD' | 'YYYY-MM-DD HH:MM:SS'"),
-    end_date: str = Query(..., description="Дата окончания 'YYYY-MM-DD' | 'YYYY-MM-DD HH:MM:SS'"),
-    storage_id: str = Query(..., description="ID склада")
+# Получить оборотно-сальдовую ведомость за период по выбранному складу.
+# Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком.
+# Поддержка различных форматов вывода (json, csv, markdown и т.д.).
+@app.get("/report/get/turnover_balance")
+def report_turnover_balance(
+    start_date: str = Query(..., description="Дата начала, формат YYYY-MM-DD"),
+    end_date: str = Query(..., description="Дата окончания, формат YYYY-MM-DD"),
+    storage_id: str = Query(..., description="ID склада"),
+    format: str = Query("json", enum=response_formats_arr)
 ):
-    # Преобразование строк в datetime
-    start_dt = common.convert_to_date(start_date)
-    end_dt = common.convert_to_date(end_date)
-    if not start_dt or not end_dt:
-        raise HTTPException(status_code=400, detail="Неправильный формат даты")
+    # Конвертируем входные даты из строк в объекты datetime
+    try:
+        start_date = common.convert_to_date(start_date)
+        end_date = common.convert_to_date(end_date)
+    except ValueError as e:
+        return PlainTextResponse(content=str(e))
 
-    # Фильтрация транзакций
-    transactions = service.repo_data.get(service.repository.transactions_key(), [])
-    filtered = [
-        t for t in transactions
-        if t.storage and t.storage.id == storage_id
-        and start_dt <= t.date <= end_dt
+
+    # Получаем название склада
+    storage_name = ""
+    storage_obj = next(
+        (storage for storage in service.repo_data.get(service.repository.storages_key(), []) if storage.id == storage_id),
+        None
+    )
+    if storage_obj:
+        storage_name = storage_obj.name
+
+    # Получаем все транзакции по заданному складу
+    transactions = [
+        transaction for transaction in service.repo_data.get(service.repository.transactions_key(), [])
+        if transaction.storage and transaction.storage.id == storage_id
     ]
 
-    # Формируем HTML таблицу
-    html_content = """
-    <table border="1">
-        <tr>
-            <th>ID</th><th>Дата</th><th>Склад</th><th>Номенклатура</th><th>Количество</th><th>Ед. измерения</th>
-        </tr>
-    """
-    for t in filtered:
-        html_content += f"""
-        <tr>
-            <td>{t.id}</td>
-            <td>{t.date}</td>
-            <td>{t.storage.name if t.storage else ''}</td>
-            <td>{t.nomenclature.name if t.nomenclature else ''}</td>
-            <td>{t.amount}</td>
-            <td>{t.range.name if t.range else ''}</td>
-        </tr>
-        """
-    html_content += "</table>"
-    return HTMLResponse(content=html_content)
+    # Рассчитываем начальный остаток на start_date_dt по каждой паре (номенклатура, единица измерения)
+    opening_balances = {}
+    for transaction in transactions:
+        if transaction.date < start_date:
+            # Получаем коэффициент (value)
+            coefficient = transaction.range.value
+
+            # Проверяем есть ли у range базовая единица
+            actual_range = transaction.range.base.id if getattr(transaction.range, 'base', None) else transaction.range.id
+
+            key = (transaction.nomenclature.id, actual_range)
+            opening_balances[key] = opening_balances.get(key, 0.0) + transaction.amount * coefficient
+
+    # Считаем приход и расход по периоду
+    incoming = {}
+    outgoing = {}
+    for transaction in transactions:
+        if start_date <= transaction.date <= end_date:
+            # Получаем коэффициент (value)
+            coefficient = transaction.range.value
+
+            # Проверяем есть ли у range базовая единица
+            actual_range = transaction.range.base.id if getattr(transaction.range, 'base', None) else transaction.range.id
+
+            key = (transaction.nomenclature.id, actual_range)
+            amount_scaled = transaction.amount * coefficient
+
+            if amount_scaled >= 0:
+                incoming[key] = incoming.get(key, 0.0) + amount_scaled
+            else:
+                outgoing[key] = outgoing.get(key, 0.0) + abs(amount_scaled)
+
+    # Формируем итоговые ключи
+    all_keys = set(opening_balances.keys()) | set(incoming.keys()) | set(outgoing.keys())
+    result = []
+
+    # Формируем итоговый список DTO для отчёта
+    for key in all_keys:
+        nomenclature_id, range_id = key
+        nomenclature = next(
+            (nomenclature for nomenclature in service.repo_data.get(service.repository.nomenclatures_key(), []) if nomenclature.id == nomenclature_id),
+            None
+        )
+        range = next(
+            (range for range in service.repo_data.get(service.repository.ranges_key(), []) if range.id == range_id),
+            None
+        )
+
+        opening = opening_balances.get(key, 0.0)
+        inc = incoming.get(key, 0.0)
+        out = outgoing.get(key, 0.0)
+        closing = opening + inc - out
+
+        dto = osv_item_dto()
+        dto.storage_id = storage_id
+        dto.storage_name = storage_name
+        dto.nomenclature_id = nomenclature_id
+        dto.nomenclature_name = nomenclature.name if nomenclature else ""
+        dto.range_id = range_id
+        dto.range_name = range.name if range else ""
+        dto.opening_balance = opening
+        dto.incoming = inc
+        dto.outgoing = out
+        dto.closing_balance = closing
+
+        result.append(dto)
+
+    # Преобразование списка DTO в нужный формат
+    factory = factory_entities()
+    formatted_result = factory.create_default(format, result)
+
+    return PlainTextResponse(content=formatted_result)
+
 
 # Запрос на добавление нового склада
 @app.put("/data/put/storage")
@@ -158,9 +235,11 @@ def put_transaction(date: str, storage_id: str, nomenclature_id: str, amount: in
     if not range_id in [i.id for i in repo_data[service.repository.ranges_key()]]:
         raise HTTPException(status_code=404, detail="Единица измерения не найден")
 
-    # Проверяем формат даты
-    if common.convert_to_date(date) is None:
-        raise HTTPException(status_code=404, detail="Неверный формат даты.\n Попробуйте - '2025-11-02' | '2025-11-02 14:30:45'")
+    # Конвертируем дату в текст
+    try:
+        date_obj = common.convert_to_date(date)
+    except ValueError as e:
+        return PlainTextResponse(content=str(e))
 
     dto = transaction_dto()
     dto.date = date
