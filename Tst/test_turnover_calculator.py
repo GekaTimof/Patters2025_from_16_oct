@@ -14,7 +14,7 @@ class test_turnover_calculator(unittest.TestCase):
 
         cls.turnover_calculator = turnover_calculator(cls.service.repository)
 
-    # проверяем, что расчёт баланса отрабатывает правильно
+    # Проверяем, что расчёт баланса отрабатывает правильно
     def test_turnover_balance_basic(self):
         start_date = "2025-01-01"
         end_date = "2027-01-01"
@@ -54,6 +54,35 @@ class test_turnover_calculator(unittest.TestCase):
             self.assertIsInstance(parsed, (list, dict))
         except json.JSONDecodeError:
             self.fail("Formatted output is not valid JSON")
+
+
+    # Порверяем, что баланс расчитывается правильно
+    # -есть нужные поля и отношения между ними соответствуют ожиданиям
+    def test_turnover_balance_correctness(self):
+        start_date = "2025-01-01"
+        end_date = "2027-01-01"
+        storage_id = "5361b6c103144bbd81e6e9cd03ec600a"
+
+        turnover = self.turnover_calculator.calculate_turnover(start_date, end_date, storage_id)
+
+        self.assertIsInstance(turnover, list)
+        self.assertGreater(len(turnover), 0)
+
+        for item in turnover:
+            self.assertTrue(hasattr(item, "opening_balance"))
+            self.assertTrue(hasattr(item, "incoming"))
+            self.assertTrue(hasattr(item, "outgoing"))
+            self.assertTrue(hasattr(item, "closing_balance"))
+
+            # Проверяем типы значений
+            self.assertIsInstance(item.opening_balance, (int, float))
+            self.assertIsInstance(item.incoming, (int, float))
+            self.assertIsInstance(item.outgoing, (int, float))
+            self.assertIsInstance(item.closing_balance, (int, float))
+
+            # Проверяем формулу итогового баланса
+            calculated_closing = item.opening_balance + item.incoming - item.outgoing
+            self.assertAlmostEqual(item.closing_balance, calculated_closing, places=5)
 
 
 if __name__ == "__main__":
