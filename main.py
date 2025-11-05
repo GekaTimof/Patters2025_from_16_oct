@@ -14,6 +14,7 @@ from Src.Logics.convert_factory import convert_factory
 from Src.Dtos.osv_item_dto import osv_item_dto
 from Src.Core.validator import convertation_exception, operation_exception, argument_exception
 from fastapi import Request
+from Src.Logics.turnover_calculator import turnover_calculator
 
 # иницилизация api
 app = FastAPI()
@@ -105,100 +106,13 @@ def report_turnover_balance(
     storage_id: str = Query(..., description="ID склада"),
     format: str = Query("json", enum=response_formats_arr)
 ):
-    # Конвертируем входные даты из строк в объекты datetime
-    try:
-        start_date = common.convert_to_date(start_date)
-        end_date = common.convert_to_date(end_date)
-    except ValueError as e:
-        return PlainTextResponse(content=str(e))
-
-
-    # Получаем название склада
-    storage_name = ""
-    storage_obj = next(
-        (storage for storage in service.repo_data.get(service.repository.storages_key(), []) if storage.id == storage_id),
-        None
+    balance_calculator = turnover_calculator(service.repository)
+    formatted_result = balance_calculator.format_turnover_report(
+        start_date=start_date,
+        end_date=end_date,
+        storage_id=storage_id,
+        format=format
     )
-    if storage_obj:
-        storage_name = storage_obj.name
-
-    # Получаем все транзакции по заданному складу
-    transactions = [
-        transaction for transaction in service.repo_data.get(service.repository.transactions_key(), [])
-        if transaction.storage and transaction.storage.id == storage_id
-    ]
-
-    # Рассчитываем начальный остаток на start_date_dt по каждой паре (номенклатура, единица измерения)
-    opening_balances = {}
-    for transaction in transactions:
-        if transaction.date < start_date:
-            # Получаем коэффициент (value)
-            coefficient = transaction.range.value
-
-            # Проверяем есть ли у range базовая единица
-            actual_range = transaction.range.base.id if getattr(transaction.range, 'base', None) else transaction.range.id
-
-            key = (transaction.nomenclature.id, actual_range)
-            opening_balances[key] = opening_balances.get(key, 0.0) + transaction.amount * coefficient
-
-    # Считаем приход и расход по периоду
-    incoming = {}
-    outgoing = {}
-    for transaction in transactions:
-        if start_date <= transaction.date <= end_date:
-            # Получаем коэффициент (value)
-            coefficient = transaction.range.value
-
-            # Проверяем есть ли у range базовая единица
-            actual_range = transaction.range.base.id if getattr(transaction.range, 'base', None) else transaction.range.id
-
-            key = (transaction.nomenclature.id, actual_range)
-            amount_scaled = transaction.amount * coefficient
-
-            if amount_scaled >= 0:
-                incoming[key] = incoming.get(key, 0.0) + amount_scaled
-            else:
-                outgoing[key] = outgoing.get(key, 0.0) + abs(amount_scaled)
-
-    # Формируем итоговые ключи
-    all_keys = set(opening_balances.keys()) | set(incoming.keys()) | set(outgoing.keys())
-    result = []
-
-    # Формируем итоговый список DTO для отчёта
-    for key in all_keys:
-        nomenclature_id, range_id = key
-        nomenclature = next(
-            (nomenclature for nomenclature in service.repo_data.get(service.repository.nomenclatures_key(), []) if nomenclature.id == nomenclature_id),
-            None
-        )
-        range = next(
-            (range for range in service.repo_data.get(service.repository.ranges_key(), []) if range.id == range_id),
-            None
-        )
-
-        opening = opening_balances.get(key, 0.0)
-        inc = incoming.get(key, 0.0)
-        out = outgoing.get(key, 0.0)
-        closing = opening + inc - out
-
-        dto = osv_item_dto()
-        dto.storage_id = storage_id
-        dto.storage_name = storage_name
-        dto.nomenclature_id = nomenclature_id
-        dto.nomenclature_name = nomenclature.name if nomenclature else ""
-        dto.range_id = range_id
-        dto.range_name = range.name if range else ""
-        dto.opening_balance = opening
-        dto.incoming = inc
-        dto.outgoing = out
-        dto.closing_balance = closing
-
-        result.append(dto)
-
-    # Преобразование списка DTO в нужный формат
-    factory = factory_entities()
-    formatted_result = factory.create_default(format, result)
-
     return PlainTextResponse(content=formatted_result)
 
 
@@ -254,7 +168,7 @@ def put_transaction(date: str, storage_id: str, nomenclature_id: str, amount: in
 
 
 # Получить json со всеми данными фабрики
-@app.get("/data/save/settings")
+@app.post("/data/save/settings")
 def get_settings(file_path: str = None):
     # Задаём путь сохранения
     if file_path:
