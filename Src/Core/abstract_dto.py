@@ -53,9 +53,6 @@ class abstact_dto(metaclass=abc.ABCMeta):
                 result_dict[field] = value.to_dict()
             else:
                 result_dict[field] = value
-        print()
-        print()
-        print(result_dict)
         return result_dict
 
 

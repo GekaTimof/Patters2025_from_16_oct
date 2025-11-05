@@ -25,3 +25,6 @@ class entity_model(abstact_model):
         item = entity_model()
         item.name = name
         return item
+
+    def to_dto(self):
+        return super().to_dto()
