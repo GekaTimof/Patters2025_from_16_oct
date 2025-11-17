@@ -1,18 +1,18 @@
 import json
 
 from Src.Core.common import common
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 
 class convert_factory:
     def __init__(self):
-        # Словарь {имя_класса: класс-наследник abstact_dto}
-        self.dto_classes = common.get_all_subclasses_dict(abstact_dto)
+        # Словарь {имя_класса: класс-наследник abstract_dto}
+        self.dto_classes = common.get_all_subclasses_dict(abstract_dto)
 
     # Возвращает dto соответствующее объекту
-    def create(self, obj) -> abstact_dto:
+    def create(self, obj) -> abstract_dto:
         if common.can_convert_to_dto(obj):
             class_name = obj.dto_type.__name__
-            # проверяем, что класс наследован от abstact_dto
+            # проверяем, что класс наследован от abstract_dto
             if class_name not in self.dto_classes.keys():
                 raise ValueError(f"Неизвестный тип DTO: {class_name}")
             # создаём dto

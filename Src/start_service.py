@@ -1,4 +1,4 @@
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 from Src.Dtos.storage_dto import storage_dto
 from Src.Dtos.transaction_dto import transaction_dto
 from Src.Models.storage_model import storage_model
@@ -132,7 +132,7 @@ class start_service:
         self.repository.add_item(key, item)
 
     # общий метод конвертации
-    def __convert_generic(self, data: dict, key: str, dto_class: abstact_dto, model_class: abstact_model) -> bool:
+    def __convert_generic(self, data: dict, key: str, dto_class: abstract_dto, model_class: abstact_model) -> bool:
         validator.validate(data, dict)
         items = data[key] if key in data else []
         if len(items) == 0:

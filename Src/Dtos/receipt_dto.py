@@ -1,4 +1,4 @@
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 from Src.Core.common import common
 from Src.Core.validator import validator, operation_exception
 
@@ -11,7 +11,7 @@ from Src.Core.validator import validator, operation_exception
 #                "receipt_items": []
 #                "steps":" []
 
-class receipt_dto(abstact_dto):
+class receipt_dto(abstract_dto):
     __portions: int = 0
     __cooking_time: str = ""
     __steps: list = []

@@ -1,18 +1,18 @@
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 from Src.Core.common import common
 from datetime import datetime
 
 # Модель транзакции (dto)
 # Пример
-#                "name":"-",
-#                "id":"0c101a7e-5934-4155-83a6-d2c388fcc11a"
-#                "date":"2025-11-02" | "2025-11-02 14:30:45",
-#                "storage_id":"7f4ecdab-0f01-4216-8b72-4c91d22b8918",
-#                "nomenclature_id":"7f4ecdab-0f01-4216-8b72-4c91d22b8918",
-#                "amount":10,
-#                "range_id":"7f4ecdab-0f01-4216-8b72-4c91d22b8918",
+#    "name":"-",
+#    "id":"0c101a7e-5934-4155-83a6-d2c388fcc11a"
+#    "date":"2025-11-02" | "2025-11-02 14:30:45",
+#    "storage_id":"7f4ecdab-0f01-4216-8b72-4c91d22b8918",
+#    "nomenclature_id":"7f4ecdab-0f01-4216-8b72-4c91d22b8918",
+#    "amount":10,
+#    "range_id":"7f4ecdab-0f01-4216-8b72-4c91d22b8918",
 
-class transaction_dto(abstact_dto):
+class transaction_dto(abstract_dto):
     __date: str = ""
     __storage_id: str = ""
     __nomenclature_id: str = ""

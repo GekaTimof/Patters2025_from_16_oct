@@ -4,7 +4,7 @@ from Src.Models.range_model import range_model
 from Src.Core.validator import validator
 from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.repository import reposity
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 
 """
 Модель номенклатуры
@@ -12,7 +12,7 @@ from Src.Core.abstract_dto import abstact_dto
 class nomenclature_model(entity_model):
     __group: group_model = None
     __range: range_model = None
-    __dto_type = nomenclature_dto
+    __dto_type: nomenclature_dto = nomenclature_dto
 
     # подходящий тип dto
     @property
@@ -50,6 +50,7 @@ class nomenclature_model(entity_model):
     def create(name: str, group: group_model, range: range_model):
         validator.validate(name, str)
         item = nomenclature_model()
+
         item.name = name
         item.group = group
         item.range = range
@@ -62,6 +63,7 @@ class nomenclature_model(entity_model):
     def from_dto(dto: nomenclature_dto, cache: dict):
         validator.validate(dto, nomenclature_dto)
         validator.validate(cache, dict)
+
         range = cache[dto.range_id] if dto.range_id in cache else None
         group = cache[dto.group_id] if dto.group_id in cache else None
         item = nomenclature_model.create(dto.name, group, range)

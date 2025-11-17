@@ -1,4 +1,4 @@
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 
 """
 DTO для элемента оборотно-сальдовой ведомости (ОСВ).
@@ -15,14 +15,14 @@ DTO для элемента оборотно-сальдовой ведомост
 - outgoing: Расход за период
 - closing_balance: Конечный остаток на дату окончания
 """
-class osv_item_dto(abstact_dto):
+class osv_item_dto(abstract_dto):
     def __init__(self):
         self.__nomenclature_id = ""
-        self.__nomenclature_name = ""
+        # self.__nomenclature_name = ""
         self.__range_id = ""
-        self.__range_name = ""
+        # self.__range_name = ""
         self.__storage_id = ""
-        self.__storage_name = ""
+        # self.__storage_name = ""
         self.__opening_balance = 0.0
         self.__incoming = 0.0
         self.__outgoing = 0.0
@@ -34,12 +34,12 @@ class osv_item_dto(abstact_dto):
     @nomenclature_id.setter
     def nomenclature_id(self, value: str):
         self.__nomenclature_id = value
-    @property
-    def nomenclature_name(self) -> str:
-        return self.__nomenclature_name
-    @nomenclature_name.setter
-    def nomenclature_name(self, value: str):
-        self.__nomenclature_name = value
+    # @property
+    # def nomenclature_name(self) -> str:
+    #     return self.__nomenclature_name
+    # @nomenclature_name.setter
+    # def nomenclature_name(self, value: str):
+    #     self.__nomenclature_name = value
 
     @property
     def range_id(self) -> str:
@@ -47,12 +47,12 @@ class osv_item_dto(abstact_dto):
     @range_id.setter
     def range_id(self, value: str):
         self.__range_id = value
-    @property
-    def range_name(self) -> str:
-        return self.__range_name
-    @range_name.setter
-    def range_name(self, value: str):
-        self.__range_name = value
+    # @property
+    # def range_name(self) -> str:
+    #     return self.__range_name
+    # @range_name.setter
+    # def range_name(self, value: str):
+    #     self.__range_name = value
 
     @property
     def storage_id(self) -> str:
@@ -60,12 +60,12 @@ class osv_item_dto(abstact_dto):
     @storage_id.setter
     def storage_id(self, value: str):
         self.__storage_id = value
-    @property
-    def storage_name(self) -> str:
-        return self.__storage_name
-    @storage_name.setter
-    def storage_name(self, value: str):
-        self.__storage_name = value
+    # @property
+    # def storage_name(self) -> str:
+    #     return self.__storage_name
+    # @storage_name.setter
+    # def storage_name(self, value: str):
+    #     self.__storage_name = value
 
     @property
     def opening_balance(self) -> float:

@@ -1,4 +1,4 @@
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 from Src.Models.nomenclature_model import nomenclature_model
 from Src.Models.range_model import range_model
 from Src.Core.common import common
@@ -11,7 +11,7 @@ from Src.Core.common import common
 #                "range_id":"a33dd457-36a8-4de6-b5f1-40afa6193346",
 #                "value":1
 
-class receipt_item_dto(abstact_dto):
+class receipt_item_dto(abstract_dto):
     __nomenclature_id: str = None
     __range_id: str = None
     __value: int = 0

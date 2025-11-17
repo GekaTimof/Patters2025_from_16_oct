@@ -1,7 +1,7 @@
 from Src.Core.entity_model import entity_model
 from Src.Core.validator import validator, argument_exception
 from Src.Dtos.range_dto import range_dto
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 
 """
 Модель единицы измерения
@@ -13,7 +13,7 @@ class range_model(entity_model):
 
     # подходящий тип dto
     @property
-    def dto_type(self) -> abstact_dto:
+    def dto_type(self) -> abstract_dto:
         return self.__dto_type
 
     """
@@ -81,7 +81,7 @@ class range_model(entity_model):
         validator.validate(dto, range_dto)
         validator.validate(cache, dict)
         base = cache[dto.base_id] if dto.base_id in cache else None
-        item = range_model.create(dto.name, dto.value, base)
+        item = range_model.create(dto.name, int(dto.value), base)
         return item
 
     # Переобразовать в dto
