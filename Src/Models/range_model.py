@@ -41,20 +41,6 @@ class range_model(entity_model):
     def base(self, value):
         self.__base = value
 
-    """
-    Киллограмм
-    """
-    @staticmethod
-    def create_kill():
-        inner_gramm = range_model.create_gramm()
-        return range_model.create("киллограмм", inner_gramm)
-
-    """
-    Грамм
-    """
-    @staticmethod
-    def create_gramm():
-        return range_model.create("грамм")
 
     """
     Универсальный метод - фабричный
@@ -87,3 +73,35 @@ class range_model(entity_model):
     # Переобразовать в dto
     def to_dto(self):
         return super().to_dto()
+
+    def get_effective_value(self) -> int:
+        # Вычисляет итоговое значение с умножением на базовые коэффициенты рекурсивно.
+        if self.base is None:
+            return self.value
+        else:
+            return self.value * self.base.get_effective_value()
+
+    def __eq__(self, other):
+        if not isinstance(other, range_model):
+            return NotImplemented
+        return self.get_effective_value() == other.get_effective_value()
+
+    def __lt__(self, other):
+        if not isinstance(other, range_model):
+            return NotImplemented
+        return self.get_effective_value() < other.get_effective_value()
+
+    def __le__(self, other):
+        if not isinstance(other, range_model):
+            return NotImplemented
+        return self.get_effective_value() <= other.get_effective_value()
+
+    def __gt__(self, other):
+        if not isinstance(other, range_model):
+            return NotImplemented
+        return self.get_effective_value() > other.get_effective_value()
+
+    def __ge__(self, other):
+        if not isinstance(other, range_model):
+            return NotImplemented
+        return self.get_effective_value() >= other.get_effective_value()

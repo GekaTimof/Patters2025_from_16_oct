@@ -17,7 +17,7 @@ from Src.Dtos.range_dto import range_dto
 from Src.Dtos.group_dto import group_dto
 from Src.Dtos.receipt_item_dto import receipt_item_dto
 from Src.Dtos.receipt_dto import receipt_dto
-from Src.Logics.convert_factory import convert_factory
+from Src.Logics.factory_convert import convert_factory
 from Src.Core.abstract_model import abstact_model
 
 

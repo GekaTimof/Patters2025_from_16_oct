@@ -137,7 +137,6 @@ class osv_calculator:
 
         # Стартовый прототип хранящий все транзакции
         start_prototype = prototype(repository.data[repository.transactions_key()])
-        print(len(start_prototype.data))
 
         # Получаем склад
         storage = next(
@@ -148,12 +147,10 @@ class osv_calculator:
         # Фильтр по складу
         storage_filter = filter_dto("storage", storage, filter_dto.equal_filter())
         filtered_by_storage = start_prototype.filter(start_prototype, storage_filter)
-        print(len(filtered_by_storage.data))
 
         # Фильтр по дате < start_date
         start_date_filter = filter_dto("date", start_date, filter_dto.less_filter())
         filtered_before_start = start_prototype.filter(filtered_by_storage, start_date_filter)
-        print(len(filtered_before_start.data))
 
         # Вычисляем начальный баланс
         opening_balances = {}
@@ -167,12 +164,10 @@ class osv_calculator:
         # Фильтр по дате > start_date
         start_date_filter = filter_dto("date", start_date, filter_dto.greater_or_equal_filter())
         filtered_after_start = start_prototype.filter(filtered_by_storage, start_date_filter)
-        print(len(filtered_after_start.data))
 
         # Фильтр по дате < end_date
         end_date_filter = filter_dto("date", end_date, filter_dto.less_or_equal_filter())
         filtered_before_end = start_prototype.filter(filtered_after_start, end_date_filter)
-        print(len(filtered_before_end.data))
 
         # Подсчёт прихода и расхода в периоде
         incoming = {}
@@ -191,9 +186,6 @@ class osv_calculator:
                 outgoing[key] = outgoing.get(key, 0.0) + abs(amount_scaled)
 
         # Итоговые ключи
-        print(opening_balances)
-        print(incoming)
-        print(outgoing)
         all_keys = set(opening_balances.keys()) | set(incoming.keys()) | set(outgoing.keys())
 
         result = []

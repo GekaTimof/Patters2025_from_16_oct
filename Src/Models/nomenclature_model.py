@@ -72,3 +72,28 @@ class nomenclature_model(entity_model):
     # Переобразовать в dto
     def to_dto(self):
         return super().to_dto()
+
+    def __eq__(self, other):
+        if not isinstance(other, nomenclature_model):
+            return NotImplemented
+        return self.name == other.name
+
+    def __lt__(self, other):
+        if not isinstance(other, nomenclature_model):
+            return NotImplemented
+        return self.name < other.name
+
+    def __le__(self, other):
+        if not isinstance(other, nomenclature_model):
+            return NotImplemented
+        return self.name <= other.name
+
+    def __gt__(self, other):
+        if not isinstance(other, nomenclature_model):
+            return NotImplemented
+        return self.name > other.name
+
+    def __ge__(self, other):
+        if not isinstance(other, nomenclature_model):
+            return NotImplemented
+        return self.name >= other.name
