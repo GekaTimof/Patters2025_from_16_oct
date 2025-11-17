@@ -129,11 +129,11 @@ class osv_calculator:
         end_date: str,
         storage_id: str
     ) -> list:
+        repository = self.__repository
+
         # Конвертируем входные даты из строк в объекты datetime
         start_date = common.convert_to_date(start_date)
         end_date = common.convert_to_date(end_date)
-
-        repository = self.__repository
 
         # Стартовый прототип хранящий все транзакции
         start_prototype = prototype(repository.data[repository.transactions_key()])
