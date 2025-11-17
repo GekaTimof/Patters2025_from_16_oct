@@ -1,3 +1,8 @@
+from Src.Core.abstract_dto import abstract_dto
+from Src.Dtos.storage_dto import storage_dto
+from Src.Dtos.transaction_dto import transaction_dto
+from Src.Models.storage_model import storage_model
+from Src.Models.transaction_model import transaction_model
 from Src.repository import reposity
 from Src.Models.range_model import range_model
 from Src.Models.group_model import group_model
@@ -13,15 +18,21 @@ from Src.Dtos.group_dto import group_dto
 from Src.Dtos.receipt_item_dto import receipt_item_dto
 from Src.Dtos.receipt_dto import receipt_dto
 from Src.Logics.convert_factory import convert_factory
+from Src.Core.abstract_model import abstact_model
 
 
 class start_service:
     # Репозиторий
     __repo: reposity = reposity()
 
-    # Словарь который содержит загруженные и инициализованные инстансы нужных объектов
-    # Ключ - id записи, значение - abstract_model
-    __cache = {}
+    # Массив пар для загрузки шаблонных данных в __convert_generic
+    __generic_convert_pairs = [
+        (reposity.ranges_key(), range_dto, range_model),
+        (reposity.groups_key(), group_dto, group_model),
+        (reposity.nomenclatures_key(), nomenclature_dto, nomenclature_model),
+        (reposity.storages_key(), storage_dto, storage_model),
+        (reposity.transactions_key(), transaction_dto, transaction_model)
+    ]
 
     # Наименование файла для загрузки настроек (полный путь)
     __load_file_name: str = "settings.json"
@@ -29,7 +40,7 @@ class start_service:
     __save_file_name: str = "settings_my.json"
 
     def __init__(self):
-        self.__repo.initalize()
+        self.__repo.initialize()
 
     # Single-tone
     def __new__(cls):
@@ -37,7 +48,7 @@ class start_service:
             cls.instance = super(start_service, cls).__new__(cls)
         return cls.instance
 
-    # получить данные репозитория
+    # Возврашщаем данные репозитория
     @property
     def repo_data(self):
         return self.__repo.data
@@ -83,98 +94,56 @@ class start_service:
 
     # Текущая конфигурация
     def settings(self) -> str:
-        factory = convert_factory()
-        settings_json = self.create_json_settings(self)
+        settings_json = self.__create_json_settings()
         return settings_json
+
 
     # Загрузить настройки из Json файла
     def load(self) -> bool:
         if self.__load_file_name == "":
             raise operation_exception("Не найден файл настроек!")
-
         # try:
         with open(self.__load_file_name, 'r') as file_instance:
             settings = json.load(file_instance)
 
-            # получаем данные о компании
+            # Получаем данные о компании
             # ***
 
-            # пролучаем repository - данные о компании
-            repository_json = settings["repository"]
+            # Пролучаем repository - данные о компании
+            repository_json= settings["repository"]
 
-            # получаем общие данные
-            self.__convert_ranges(repository_json)
-            self.__convert_groups(repository_json)
-            self.__convert_nomenclatures(repository_json)
+            # Загружаем общие данные (через шаблонную конвертацию)
+            for (key, dto, model) in self.__generic_convert_pairs:
+                self.__convert_generic(data=repository_json,
+                                       key=key,
+                                       dto_class=dto,
+                                       model_class=model)
+
+            # Загружаем данные по сложным шаблонам
             self.__convert_receipts(repository_json)
 
             return True
-
-            # # получаем рецепты
-            # if reposity.receipts_key() in repository.keys():
-            #
-            #     # получаем список рецептов
-            #     receipts = repository[reposity.receipts_key()]
-            #     # конвертируем все рецепты
-            #     for receipt in receipts:
-            #         if not self.__convert_receipt(receipt):
-            #             return False
-            #     return True
-            # else:
-            #     return False
-        # except Exception as e:
-        #     error_message = str(e)
-        #     print(error_message)
-        #     return False
 
     # Сохранить элемент в репозитории
     def __save_item(self, key: str, dto, item):
         validator.validate(key, str)
         item.id = dto.id
-        self.__cache.setdefault(dto.id, item)
-        self.__repo.data[key].append(item)
+        self.repository.cache.setdefault(dto.id, item)
+        self.repository.add_item(key, item)
 
-    # Загрузить единицы измерений
-    def __convert_ranges(self, data: dict) -> bool:
+    # общий метод конвертации
+    def __convert_generic(self, data: dict, key: str, dto_class: abstract_dto, model_class: abstact_model) -> bool:
         validator.validate(data, dict)
-        ranges = data[reposity.ranges_key()] if reposity.ranges_key() in data else []
-        if len(ranges) == 0:
+        items = data[key] if key in data else []
+        if len(items) == 0:
             return False
 
-        for range in ranges:
-            dto = range_dto().create(range)
-            item = range_model.from_dto(dto, self.__cache)
-            self.__save_item(reposity.ranges_key(), dto, item)
-
+        for item in items:
+            dto = dto_class().create(item)
+            model_item = model_class.from_dto(dto, self.repository.cache)
+            self.__save_item(key, dto, model_item)
         return True
 
-    # Загрузить группы номенклатуры
-    def __convert_groups(self, data: dict) -> bool:
-        validator.validate(data, dict)
-        groups = data[reposity.groups_key()] if reposity.groups_key() in data else []
-        if len(groups) == 0:
-            return False
-
-        for group in groups:
-            dto = group_dto().create(group)
-            item = group_model.from_dto(dto, self.__cache)
-            self.__save_item(reposity.groups_key(), dto, item)
-
-        return True
-
-    # Загрузить номенклатуру
-    def __convert_nomenclatures(self, data: dict) -> bool:
-        validator.validate(data, dict)
-        nomenclatures = data[reposity.nomenclatures_key()] if reposity.nomenclatures_key() in data else []
-        if len(nomenclatures) == 0:
-            return False
-
-        for nomenclature in nomenclatures:
-            dto = nomenclature_dto().create(nomenclature)
-            item = nomenclature_model.from_dto(dto, self.__cache)
-            self.__save_item(reposity.nomenclatures_key(), dto, item)
-
-        return True
 
     # Обработать полученный словарь
     def __convert_receipts(self, data: dict) -> bool:
@@ -200,7 +169,7 @@ class start_service:
 
             for receipt_item in receipt_items:
                 dto = receipt_item_dto().create(receipt_item)
-                item = receipt_item_model.from_dto(dto, self.__cache)
+                item = receipt_item_model.from_dto(dto, self.repository.cache)
                 # Созраняем ингридиент в репозиторий
                 self.__save_item(reposity.receipt_items_key(), dto, item)
                 receipt_full.receipt_items.append(item)
@@ -212,25 +181,29 @@ class start_service:
                     receipt_full.steps.append(step)
 
             # Сохраняем рецепт в репозиторий
-            self.__repo.data[reposity.receipts_key()].append(receipt_full)
+            self.repository.add_item(reposity.receipts_key(), receipt_full)
         return True
 
 
+    def add_item_to_repository(self, key: str, item: abstact_model):
+        validator.validate(key, str)
+        validator.validate(item, abstact_model)
+
+        if key in self.repository.keys():
+            self.repository.add_item(key, item)
+        else:
+            raise argument_exception(f"в репозитории нет ключа {key}")
+
+
     # Метод конвертирующий и возвращающий данные из репозитория в формате json
-    def create_json_settings(self, service) -> str:
+    def __create_json_settings(self) -> str:
         factory = convert_factory()
 
         result_json = {}
         result_json["is_firs_start"] = False
         result_json["company"] = {}
-        result_json["repository"] = factory.create_dict_from_dto(service.repository.data)
+        result_json["repository"] = factory.create_dict_from_dto(self.repository.data)
         return json.dumps(result_json, ensure_ascii=False, indent=2)
-
-
-    # Возврашщаем данные из репзитория
-    @property
-    def data(self):
-        return self.__repo.data
 
 
     # метод сохранения сервиса в файл
