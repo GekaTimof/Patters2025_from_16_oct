@@ -12,6 +12,7 @@ class TestDataFileGeneration(unittest.TestCase):
         os.makedirs(self.output_dir, exist_ok=True)
         self.factory = factory_entities()
         self.service = start_service()
+        self.service.load_file_name = "settings_my.json"
         self.service.start()
 
     def save_response_to_file(self, filename, content):

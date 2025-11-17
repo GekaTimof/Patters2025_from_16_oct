@@ -1,5 +1,5 @@
 from Src.Core.entity_model import entity_model
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 from Src.Dtos.group_dto import group_dto
 
 """
@@ -10,14 +10,14 @@ class group_model(entity_model):
 
     # Подходящий тип dto
     @property
-    def dto_type(self) -> abstact_dto:
+    def dto_type(self) -> abstract_dto:
         return self.__dto_type
 
     """
     Фабричный метод из Dto
     """
     @staticmethod
-    def from_dto(dto: abstact_dto, cache: dict):
+    def from_dto(dto: abstract_dto, cache: dict):
         item = group_model()
         item.name = dto.name
         item.id = dto.id

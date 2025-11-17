@@ -1,5 +1,8 @@
 from Src.Core.entity_model import entity_model
 from Src.Core.validator import argument_exception
+from datetime import datetime
+from Src.Core.validator import convertation_exception
+
 
 # Набор статических общих методов
 class common:
@@ -67,3 +70,21 @@ class common:
             return True
         else:
             return False
+
+    """
+    Переводим строку в datetime
+    если не подходит формат возвращаем None 
+    """
+    @staticmethod
+    def convert_to_date(date_str: str):
+        date_str = date_str.strip()
+        try:
+            # Первая попытка: формат с датой и временем
+            return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            try:
+                # Вторая попытка: только дата
+                return datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                # Ни один формат не подошёл
+                raise convertation_exception(f"Не подходящий формат для конвертации в datetime - {date_str}. Попробуйте - '2025-11-02' | '2025-11-02 14:30:45'")

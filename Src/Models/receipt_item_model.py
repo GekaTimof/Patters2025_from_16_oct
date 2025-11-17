@@ -10,7 +10,7 @@ class receipt_item_model(abstact_model):
     __nomenclature: nomenclature_model
     __range: range_model
     __value: int
-    __dto_type = receipt_item_dto
+    __dto_type: receipt_item_dto = receipt_item_dto
 
     # подходящий тип dto
     @property

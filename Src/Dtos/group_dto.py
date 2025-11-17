@@ -1,4 +1,4 @@
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 from Src.Core.common import common
 
 # Модель группы номенклатук (dto)
@@ -6,7 +6,7 @@ from Src.Core.common import common
 #                "name":"Ингредиенты",
 #                "id":"7f4ecdab-0f01-4216-8b72-4c91d22b8918"
 
-class group_dto(abstact_dto):
+class group_dto(abstract_dto):
     pass
 
     # # конвертация dto в dict

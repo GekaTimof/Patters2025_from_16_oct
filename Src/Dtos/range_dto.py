@@ -1,4 +1,4 @@
-from Src.Core.abstract_dto import abstact_dto
+from Src.Core.abstract_dto import abstract_dto
 from Src.Core.common import common
 
 
@@ -8,7 +8,7 @@ from Src.Core.common import common
 #                "id":"adb7510f-687d-428f-a697-26e53d3f65b7",
 #                "base_id":null,
 #                "value":1
-class range_dto(abstact_dto):
+class range_dto(abstract_dto):
     __base_id: str = None
     __value: int = 1
 

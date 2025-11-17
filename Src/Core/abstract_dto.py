@@ -8,7 +8,7 @@ import json
 """
 
 
-class abstact_dto(metaclass=abc.ABCMeta):
+class abstract_dto(metaclass=abc.ABCMeta):
     __name: str = ""
     __id: str = ""
 
@@ -29,7 +29,7 @@ class abstact_dto(metaclass=abc.ABCMeta):
         self.__id = value
 
     # Универсальный метод для загрузщки dto из словаря
-    def create(self, data) -> "abstact_dto":
+    def create(self, data) -> "abstract_dto":
         validator.validate(data, dict)
         fields = common.get_fields(self)
         matching_keys = list(filter(lambda key: key in fields, data.keys()))
