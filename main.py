@@ -56,8 +56,12 @@ def get_data(repo_key: RepoKeyEnum, format: str = Query("json", enum=response_fo
             raise HTTPException(status_code=404, detail=f"Набор данных {repo_key} не найден")
 
         data = service.repo_data[repo_key]
+        conv_factory = convert_factory()
+        convert_data = conv_factory.create_dict_from_dto(data)
+
         factory = factory_entities()
-        formatted_content = factory.create_default(format, data)
+        formatted_content = factory.create_default(format, convert_data)
+
 
         return PlainTextResponse(content=formatted_content)
     except Exception as e:
@@ -78,8 +82,12 @@ def post_data(
         prototype_data = prototype(service.repo_data[repo_key])
         prototype_filtered_data = prototype.multi_transforming(prototype_data, transform_dict)
         data = prototype_filtered_data.data
+
+        conv_factory = convert_factory()
+        convert_data = conv_factory.create_dict_from_dto(data)
+
         factory = factory_entities()
-        formatted_content = factory.create_default(format, data)
+        formatted_content = factory.create_default(format, convert_data)
 
         return PlainTextResponse(content=formatted_content)
     except Exception as e:

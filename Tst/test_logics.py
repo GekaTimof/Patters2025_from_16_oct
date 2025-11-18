@@ -29,7 +29,7 @@ class test_logics(unittest.TestCase):
 
 
     # Проверим формирование JSON
-    def test_notNone_response_json_buld(self):
+    def test_notNone_response_json_build(self):
         # Подготовка
         response = response_json()
         data = []
@@ -44,7 +44,7 @@ class test_logics(unittest.TestCase):
 
 
     # Проверим формирование Markdown
-    def test_notNone_response_md_buld(self):
+    def test_notNone_response_md_build(self):
         # Подготовка
         response = response_md()
         data = []
@@ -59,7 +59,7 @@ class test_logics(unittest.TestCase):
 
 
     # Проверим формирование XML
-    def test_notNone_response_xml_buld(self):
+    def test_notNone_response_xml_build(self):
         # Подготовка
         response = response_xml()
         data = []
@@ -94,14 +94,14 @@ class test_logics(unittest.TestCase):
 
     # Метод для проверки полей
     def check_fields_in_output(self, output, data, delimiter=None):
-        fields = common.get_fields(data[0])
+        fields = common.get_fields(data)
         # Проверяем, что все имена полей есть в выводе (заголовки)
         for field in fields:
             self.assertIn(field, output)
 
         # Проверяем, что значения всех полей первого объекта есть в выводе
         for field in fields:
-            value = str(getattr(data[0], field, ""))
+            value = str(getattr(data, field, ""))
             if delimiter:
                 # Для csv и md проверяем с учетом разделителей
                 self.assertIn(value, output)
