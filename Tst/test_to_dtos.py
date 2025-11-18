@@ -8,7 +8,7 @@ service.start()
 # Набор тестов для проверки работы статового сервиса
 class test_to_dto(unittest.TestCase):
     # проверяем, что при конвертации получается dto
-    def test_convertion_to_dto(self):
+    def test_conversion_to_dto(self):
         nomenclature = service.repo_data[reposity.nomenclatures_key()][0]
         # print(nomenclature)
         dto = nomenclature.to_dto()

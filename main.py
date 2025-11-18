@@ -41,7 +41,7 @@ RepoKeyEnum = Enum('RepoKeyEnum', [(key, key) for key in repo_keys], type=str)
 
 # Обработчик моих ошибок — возвращает подробное сообщение с кодом 400
 @app.exception_handler(convertation_exception)
-async def convertation_exception_handler(request: Request, exc: convertation_exception|operation_exception|argument_exception):
+async def conversion_exception_handler(request: Request, exc: convertation_exception|operation_exception|argument_exception):
     return JSONResponse(
         status_code=400,
         content={"detail": str(exc)}
@@ -71,9 +71,7 @@ def post_data(
     format: str = Query("json", enum=response_formats_arr),
     transform_dict: dict = Body({})
 ):
-    print("get")
     try:
-        print(transform_dict)
         if repo_key not in repo_keys:
             raise HTTPException(status_code=404, detail=f"Набор данных {repo_key} не найден")
 
@@ -124,19 +122,21 @@ def get_receipt(receipt_id: str):
 # Получить оборотно-сальдовую ведомость за период по выбранному складу.
 # Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком.
 # Поддержка различных форматов вывода (json, csv, markdown и т.д.).
-@app.get("/report/get/turnover_balance")
-def report_turnover_balance(
+@app.post("/report/get/osv")
+def report_osv(
     start_date: str = Query(..., description="Дата начала, формат YYYY-MM-DD"),
     end_date: str = Query(..., description="Дата окончания, формат YYYY-MM-DD"),
     storage_id: str = Query(..., description="ID склада"),
-    format: str = Query("json", enum=response_formats_arr)
+    format: str = Query("json", enum=response_formats_arr),
+    transform_dict: dict = Body({})
 ):
     balance_calculator = osv_calculator(service.repository)
     formatted_result = balance_calculator.format_osv_report(
         start_date=start_date,
         end_date=end_date,
         storage_id=storage_id,
-        format=format
+        format=format,
+        transform_dict=transform_dict
     )
     return PlainTextResponse(content=formatted_result)
 
