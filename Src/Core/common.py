@@ -6,7 +6,6 @@ from Src.Core.validator import convertation_exception
 
 # Набор статических общих методов
 class common:
-
     """
     Получить список наименований всех моделей
     """
@@ -41,8 +40,44 @@ class common:
                     continue
 
                 result.append(item)
+        return result
+
+
+    """
+    Получить полный список полей любой модели
+        - is_common = True - исключить из списка словари и списки
+    """
+    @staticmethod
+    def get_setters(source, is_common: bool = False) -> list:
+        if source is None:
+            raise argument_exception("Некорректно переданы аргументы!")
+
+        # Определяем класс, если передан экземпляр
+        cls = source if isinstance(source, type) else source.__class__
+
+        items = list(filter(lambda x: not x.startswith("_"), dir(cls)))
+        result = []
+
+        for item in items:
+            attribute = getattr(cls, item, None)
+            # Проверяем, что это property и у него есть сеттер (fset)
+            if isinstance(attribute, property) and attribute.fset is not None:
+                value = None
+                # Если передан экземпляр, пробуем получить значение свойства
+                if not isinstance(source, type):
+                    try:
+                        value = getattr(source, item)
+                    except Exception:
+                        value = None
+
+                # Исключаем dict и list если указан флаг is_common
+                if is_common and (isinstance(value, dict) or isinstance(value, list)):
+                    continue
+
+                result.append(item)
 
         return result
+
 
     """
     Получить полный список наследников класса

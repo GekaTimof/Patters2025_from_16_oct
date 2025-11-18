@@ -109,11 +109,11 @@ class osv_calculator:
 
             dto = osv_item_dto()
             dto.storage_id = storage_id
-            # dto.storage_name = storage_name
+            dto.storage_name = storage_name
             dto.nomenclature_id = nomenclature_id
-            # dto.nomenclature_name = nomenclature.name if nomenclature else ""
+            dto.nomenclature_name = nomenclature.name if nomenclature else ""
             dto.range_id = range_id
-            # dto.range_name = range.name if range else ""
+            dto.range_name = range.name if range else ""
             dto.opening_balance = opening
             dto.incoming = inc
             dto.outgoing = out
@@ -127,23 +127,30 @@ class osv_calculator:
         self,
         start_date: str,
         end_date: str,
-        storage_id: str
+        storage_id: str,
+        transform_dict: dict = {}
     ) -> list:
+        repository = self.__repository
+
         # Конвертируем входные даты из строк в объекты datetime
         start_date = common.convert_to_date(start_date)
         end_date = common.convert_to_date(end_date)
-
-        repository = self.__repository
 
         # Стартовый прототип хранящий все транзакции
         start_prototype = prototype(repository.data[repository.transactions_key()])
 
         # Получаем склад
+
+        # Получаем название склада
+        storage_name = ""
         storage = next(
             (storage for storage in repository.data.get(repository.storages_key(), []) if
              storage.id == storage_id),
             None
         )
+        if storage:
+            storage_name = storage.name
+
         # Фильтр по складу
         storage_filter = filter_dto("storage", storage, filter_dto.equal_filter())
         filtered_by_storage = start_prototype.filter(start_prototype, storage_filter)
@@ -191,6 +198,18 @@ class osv_calculator:
         result = []
         for key in all_keys:
             nomenclature_id, range_id = key
+            # Получаем нужную номенклатуру
+            nomenclature = next(
+                (nomenclature for nomenclature in repository.data.get(repository.nomenclatures_key(), []) if
+                 nomenclature.id == nomenclature_id),
+                None
+            )
+            # Получаем нужную единицу измерения
+            range = next(
+                (range for range in repository.data.get(repository.ranges_key(), []) if range.id == range_id),
+                None
+            )
+
             opening = opening_balances.get(key, 0.0)
             inc = incoming.get(key, 0.0)
             out = outgoing.get(key, 0.0)
@@ -198,8 +217,11 @@ class osv_calculator:
 
             dto = osv_item_dto()
             dto.storage_id = storage_id
+            dto.storage_name = storage_name
             dto.nomenclature_id = nomenclature_id
+            dto.nomenclature_name = nomenclature.name if nomenclature else ""
             dto.range_id = range_id
+            dto.range_name = range.name if range else ""
             dto.opening_balance = opening
             dto.incoming = inc
             dto.outgoing = out
@@ -207,16 +229,38 @@ class osv_calculator:
 
             result.append(dto)
 
-        return result
+        # Дополнительная обработка
+        prototype_result = prototype(result)
+        filtered_result = prototype.multi_transforming(prototype_result, transform_dict)
+
+        return filtered_result.data
 
 
     # Получить оборотно-сальдовую ведомость в заданном формате (json, csv, markdown и т.д.).
+    # Пример входных данных
+    """
+    start_date = 2025-10-02
+    end_date = 2027-10-02
+    storage_id = "5361b6c103144bbd81e6e9cd03ec600a"
+    format = "json"
+    transform_dict = {
+        "filter": [
+        ],
+        "sort": [
+            {
+                "field_name": "closing_balance",
+                "sort_type": "ASCENDING"
+            }
+        ]
+    }
+    """
     def format_osv_report(
             self,
             start_date: str,
             end_date: str,
             storage_id: str,
             format: str,
+            transform_dict: dict = {}
     ) -> str:
         validator.validate(format, str)
 
@@ -224,7 +268,8 @@ class osv_calculator:
         turnover = self.calculate_osv_by_prototype(
             start_date=start_date,
             end_date=end_date,
-            storage_id=storage_id
+            storage_id=storage_id,
+            transform_dict=transform_dict
         )
         factory = factory_entities()
         return factory.create_default(format, turnover)

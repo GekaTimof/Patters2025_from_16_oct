@@ -4,15 +4,14 @@ import json
 
 class response_json(abstract_response):
     # Сформировать JSON
-    def create(self, format: str, data: list):
-        result = []
+    def create(self, format: str, data: list | dict):
+        def to_serializable(d):
+            if isinstance(d, dict):
+                return {k: to_serializable(v) for k, v in d.items()}
+            elif isinstance(d, list):
+                return [to_serializable(x) for x in d]
+            else:
+                return str(d)  # или d
 
-        for row in data:
-            obj = {}
-            fields = common.get_fields(row)
-            for f in fields:
-                obj[f] = str(getattr(row, f, ""))
-            result.append(obj)
-
-        return json.dumps(result, ensure_ascii=False, indent=2)
+        return json.dumps(to_serializable(data), ensure_ascii=False, indent=2)
 
