@@ -1,10 +1,10 @@
 import unittest
-from Src.Logics.osv_calculator import turnover_calculator
+from Src.Logics.osv_calculator import osv_calculator
 from Src.start_service import start_service
 import json
 
 # Набор тестов для работы с Dto
-class test_turnover_calculator(unittest.TestCase):
+class test_osv_calculator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Запускаем сервис один раз для всех тестов
@@ -12,7 +12,7 @@ class test_turnover_calculator(unittest.TestCase):
         cls.service.load_file_name = "settings_my.json"
         cls.service.start()
 
-        cls.turnover_calculator = turnover_calculator(cls.service.repository)
+        cls.osv_calculator = osv_calculator(cls.service.repository)
 
     # Проверяем, что расчёт баланса отрабатывает правильно
     def test_turnover_balance_basic(self):
@@ -20,7 +20,7 @@ class test_turnover_calculator(unittest.TestCase):
         end_date = "2027-01-01"
         storage_id = "5361b6c103144bbd81e6e9cd03ec600a"
 
-        turnover = self.turnover_calculator.calculate_turnover(start_date, end_date, storage_id)
+        turnover = self.osv_calculator.calculate_osv(start_date, end_date, storage_id)
 
         # Проверяем, что получили список DTO
         self.assertIsInstance(turnover, list)
@@ -40,7 +40,7 @@ class test_turnover_calculator(unittest.TestCase):
         storage_id = "5361b6c103144bbd81e6e9cd03ec600a"
         format = "json"
 
-        formatted = self.turnover_calculator.format_turnover_report(
+        formatted = self.osv_calculator.format_osv_report(
             start_date=start_date,
             end_date=end_date,
             storage_id=storage_id,
@@ -63,7 +63,7 @@ class test_turnover_calculator(unittest.TestCase):
         end_date = "2027-01-01"
         storage_id = "5361b6c103144bbd81e6e9cd03ec600a"
 
-        turnover = self.turnover_calculator.calculate_turnover(start_date, end_date, storage_id)
+        turnover = self.osv_calculator.calculate_osv(start_date, end_date, storage_id)
 
         self.assertIsInstance(turnover, list)
         self.assertGreater(len(turnover), 0)
