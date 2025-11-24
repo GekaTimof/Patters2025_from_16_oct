@@ -1,3 +1,5 @@
+import datetime
+
 from Src.Core.common import common
 from Src.Core.validator import validator
 from Src.Dtos.osv_item_dto import osv_item_dto
@@ -5,6 +7,7 @@ from Src.Logics.factory_entities import factory_entities
 from Src.repository import reposity
 from Src.Core.prototype import prototype
 from Src.Dtos.filter_dto import filter_dto
+from Src.Core.common import argument_exception
 
 """
 Сервис для расчёта оборота по конкретному складу в выбранный период
@@ -123,6 +126,7 @@ class osv_calculator:
         return result
 
 
+    # Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком. (работает через прототип)
     def calculate_osv_by_prototype(
         self,
         start_date: str,
@@ -236,6 +240,65 @@ class osv_calculator:
         return filtered_result.data
 
 
+    # Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком. (применяет блокировку)
+    def calculate_osv_with_block(
+        self,
+        end_date: str,
+        storage_id: str,
+        transform_dict: dict = {}
+    ) -> list:
+
+        repository = self.__repository
+        block_date = repository.data[repository.block_period_setting_key()]
+
+        if end_date <= block_date:
+            # Получаем данные до блокировки по нужному складу
+            period_osv_dict: dict = repository.cache[repository.cache_period_osv_key()]
+            period_osv: list = period_osv_dict.get(storage_id, False)
+            if not period_osv:
+                raise argument_exception(f"Non exist storage - {storage_id}")
+
+            # Добавляем преобразования
+            osv_prototype = prototype(period_osv)
+            filtered_result = osv_prototype.multi_transforming(osv_prototype, transform_dict)
+            return filtered_result.data
+        else:
+            # Получаем данные до блокировки по нужному складу
+            period_osv_dict: dict = repository.cache[repository.cache_period_osv_key()]
+            period_osv: list = period_osv_dict.get(storage_id, False)
+            if not period_osv:
+                raise argument_exception(f"Non exist storage - {storage_id}")
+
+            after_period_osv = self.calculate_osv_by_prototype(
+                start_date=block_date,
+                end_date=end_date,
+                storage_id=storage_id
+            )
+
+            result_osv = []
+            index_by_nomenclature = {}
+            # Объединяем osv
+            for item in period_osv + after_period_osv:
+                key = item.nomenclature_id
+                # Если уже есть такоая номенклатура объединяем osv по числовым полям
+                if key in index_by_nomenclature:
+                    existing = index_by_nomenclature[key]
+                    for setter in common.get_setters(item):
+                        v1 = getattr(existing, setter)
+                        v2 = getattr(item, setter)
+                        if isinstance(v1, (int, float)) and isinstance(v2, (int, float)):
+                            setattr(existing, setter, v1 + v2)
+                # Добавляем osv под номенклатуру
+                else:
+                    result_osv.append(item)
+                    index_by_nomenclature[key] = item
+
+            # Добавляем преобразования
+            osv_prototype = prototype(result_osv)
+            filtered_result = osv_prototype.multi_transforming(osv_prototype, transform_dict)
+            return filtered_result.data
+
+
     # Получить оборотно-сальдовую ведомость в заданном формате (json, csv, markdown и т.д.).
     # Пример входных данных
     """
@@ -256,20 +319,28 @@ class osv_calculator:
     """
     def format_osv_report(
             self,
-            start_date: str,
             end_date: str,
             storage_id: str,
             format: str,
+            start_date: str = "",
             transform_dict: dict = {}
     ) -> str:
         validator.validate(format, str)
 
         # считаем оборот
-        turnover = self.calculate_osv_by_prototype(
-            start_date=start_date,
-            end_date=end_date,
-            storage_id=storage_id,
-            transform_dict=transform_dict
-        )
+        osv = None
+        if start_date:
+            osv = self.calculate_osv_by_prototype(
+                start_date=start_date,
+                end_date=end_date,
+                storage_id=storage_id,
+                transform_dict=transform_dict
+            )
+        else:
+            osv = self.calculate_osv_with_block(
+                end_date=end_date,
+                storage_id=storage_id,
+                transform_dict=transform_dict
+            )
         factory = factory_entities()
-        return factory.create_default(format, turnover)
+        return factory.create_default(format, osv)

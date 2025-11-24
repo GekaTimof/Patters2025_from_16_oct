@@ -38,6 +38,11 @@ repo_keys = service.repository.keys()
 # ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
 RepoKeyEnum = Enum('RepoKeyEnum', [(key, key) for key in repo_keys], type=str)
 
+# список всех настроек, которые можно предоставить (их ключи храняться в репозитории)
+settings_keys = service.repository.setting_keys()
+# ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
+SettingsKeyEnum = Enum('SettingsKeyEnum', [(key, key) for key in settings_keys], type=str)
+
 
 # Обработчик моих ошибок — возвращает подробное сообщение с кодом 400
 @app.exception_handler(convertation_exception)
@@ -94,6 +99,36 @@ def post_data(
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+# Запрос для получения списка настроек c фильтрацией и сортировкой в формате json
+@app.post("/data/get/settings/{repo_key}")
+def post_settings(
+    setting_key: SettingsKeyEnum,
+    format: str = Query("json", enum=response_formats_arr),
+    transform_dict: dict = Body({})
+):
+    try:
+        if setting_key not in settings_keys:
+            raise HTTPException(status_code=404, detail=f"Настройки {setting_key} не найдены")
+
+        data = service.repo_data[setting_key]
+
+        # Если это список, который можно преобразовать - прелбразовываем
+        if type(data) == list:
+            prototype_data = prototype(data)
+            prototype_filtered_data = prototype.multi_transforming(prototype_data, transform_dict)
+            data = prototype_filtered_data.data
+
+            conv_factory = convert_factory()
+            data = conv_factory.create_dict_from_dto(data)
+
+        factory = factory_entities()
+        formatted_content = factory.create_default(format, data)
+
+        return PlainTextResponse(content=formatted_content)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 # Получить json со всеми данными фабрики
 @app.get("/data/get/settings")
 def get_settings():
@@ -127,6 +162,41 @@ def get_receipt(receipt_id: str):
     raise HTTPException(status_code=404, detail="Рецепт не найден")
 
 
+# Получить оборотно-сальдовую ведомость за период по выбранному складу (с учётом блокировки).
+# Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком.
+# Поддержка различных форматов вывода (json, csv, markdown и т.д.).
+@app.post("/report/get/osv_with_block")
+def report_osv_with_block(
+    end_date: str = Query(..., description="Дата окончания, формат YYYY-MM-DD"),
+    storage_id: str = Query(..., description="ID склада"),
+    format: str = Query("json", enum=response_formats_arr),
+    transform_dict: dict = Body({})
+):
+    balance_calculator = osv_calculator(service.repository)
+    formatted_result = balance_calculator.format_osv_report(
+        end_date=end_date,
+        storage_id=storage_id,
+        format=format,
+        transform_dict=transform_dict
+    )
+    return PlainTextResponse(content=formatted_result)
+
+
+# Получить оборотно-сальдовую ведомость за период по выбранному складу (за период блоктровки).
+# Поддержка различных форматов вывода (json, csv, markdown и т.д.).
+@app.post("/report/get/osv_block_period")
+def report_osv_block_period(
+    format: str = Query("json", enum=response_formats_arr),
+):
+    period_osv = service.repository.cache[service.repository.cache_period_osv_key()]
+
+    # Конвертируем в нужный формат
+    factory = factory_entities()
+    formatted_content = factory.create_default(format, period_osv)
+
+    return PlainTextResponse(content=formatted_content)
+
+
 # Получить оборотно-сальдовую ведомость за период по выбранному складу.
 # Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком.
 # Поддержка различных форматов вывода (json, csv, markdown и т.д.).
@@ -147,6 +217,15 @@ def report_osv(
         transform_dict=transform_dict
     )
     return PlainTextResponse(content=formatted_result)
+
+
+# Смена периода блокировки и перерасчёт результата транзакций
+@app.put("/report/set/block_period")
+def set_block_period(
+    block_period: str = Query(..., description="Дата окончания, формат YYYY-MM-DD"),
+):
+    service.change_block_period(block_period)
+    return PlainTextResponse(content=f"Установлен новый период блокировки, block_period: {block_period}")
 
 
 # Запрос на добавление нового склада
