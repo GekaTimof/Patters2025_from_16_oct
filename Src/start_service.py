@@ -242,7 +242,6 @@ class start_service:
             )
             period_osv_dict[storage_id] = period_osv
 
-        print("period_osv_dict", period_osv_dict)
         self.repository.add_cache_item(reposity.cache_period_osv_key(), period_osv_dict)
         return True
 
