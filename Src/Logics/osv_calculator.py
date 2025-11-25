@@ -143,8 +143,6 @@ class osv_calculator:
         # Стартовый прототип хранящий все транзакции
         start_prototype = prototype(repository.data[repository.transactions_key()])
 
-        # Получаем склад
-
         # Получаем название склада
         storage_name = ""
         storage = next(
@@ -267,10 +265,12 @@ class osv_calculator:
             period_osv_dict: dict = repository.cache[repository.cache_period_osv_key()]
             period_osv: list = period_osv_dict.get(storage_id, False)
             if not period_osv:
-                raise argument_exception(f"Non exist storage - {storage_id}")
+                return []
+
+            after_block_date = str(common.convert_to_date(block_date) + datetime.timedelta(days=1))
 
             after_period_osv = self.calculate_osv_by_prototype(
-                start_date=block_date,
+                start_date=after_block_date,
                 end_date=end_date,
                 storage_id=storage_id
             )
@@ -280,7 +280,7 @@ class osv_calculator:
             # Объединяем osv
             for item in period_osv + after_period_osv:
                 key = item.nomenclature_id
-                # Если уже есть такоая номенклатура объединяем osv по числовым полям
+                # Если уже есть такая номенклатура объединяем osv по числовым полям
                 if key in index_by_nomenclature:
                     existing = index_by_nomenclature[key]
                     for setter in common.get_setters(item):
@@ -288,10 +288,11 @@ class osv_calculator:
                         v2 = getattr(item, setter)
                         if isinstance(v1, (int, float)) and isinstance(v2, (int, float)):
                             setattr(existing, setter, v1 + v2)
-                # Добавляем osv под номенклатуру
+                # Добавляем копию osv под номенклатуру
                 else:
-                    result_osv.append(item)
-                    index_by_nomenclature[key] = item
+                    item_copy = item.copy()
+                    result_osv.append(item_copy)
+                    index_by_nomenclature[key] = item_copy
 
             # Добавляем преобразования
             osv_prototype = prototype(result_osv)
