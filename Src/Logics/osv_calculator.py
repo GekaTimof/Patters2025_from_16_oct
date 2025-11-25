@@ -260,6 +260,7 @@ class osv_calculator:
             osv_prototype = prototype(period_osv)
             filtered_result = osv_prototype.multi_transforming(osv_prototype, transform_dict)
             return filtered_result.data
+
         else:
             # Получаем данные до блокировки по нужному складу
             period_osv_dict: dict = repository.cache[repository.cache_period_osv_key()]
@@ -267,19 +268,97 @@ class osv_calculator:
             if not period_osv:
                 return []
 
-            after_block_date = str(common.convert_to_date(block_date) + datetime.timedelta(days=1))
+            after_block_date = common.convert_to_date(block_date) + datetime.timedelta(seconds=1)
+            end_date = common.convert_to_date(end_date)
 
-            after_period_osv = self.calculate_osv_by_prototype(
-                start_date=after_block_date,
-                end_date=end_date,
-                storage_id=storage_id
+            # Стартовый прототип хранящий все транзакции
+            start_prototype = prototype(repository.data[repository.transactions_key()])
+
+            # Получаем название склада
+            storage_name = ""
+            storage = next(
+                (storage for storage in repository.data.get(repository.storages_key(), []) if
+                 storage.id == storage_id),
+                None
             )
+            if storage:
+                storage_name = storage.name
+
+            # Фильтр по складу
+            storage_filter = filter_dto("storage", storage, filter_dto.equal_filter())
+            filtered_by_storage = start_prototype.filter(start_prototype, storage_filter)
+
+            # Фильтр по дате > start_date
+            start_date_filter = filter_dto("date", after_block_date, filter_dto.greater_or_equal_filter())
+            filtered_after_start = start_prototype.filter(filtered_by_storage, start_date_filter)
+
+            # Фильтр по дате < end_date
+            end_date_filter = filter_dto("date", end_date, filter_dto.less_or_equal_filter())
+            filtered_before_end = start_prototype.filter(filtered_after_start, end_date_filter)
+
+            # Подсчёт прихода и расхода в периоде
+            incoming = {}
+            outgoing = {}
+
+            for transaction in filtered_before_end.data:
+                coefficient = transaction.range.value
+                actual_range = transaction.range.base.id if getattr(transaction.range, 'base',
+                                                                    None) else transaction.range.id
+                key = (transaction.nomenclature.id, actual_range)
+                amount_scaled = transaction.amount * coefficient
+
+                if amount_scaled >= 0:
+                    incoming[key] = incoming.get(key, 0.0) + amount_scaled
+                else:
+                    outgoing[key] = outgoing.get(key, 0.0) + abs(amount_scaled)
+
+            # Итоговые ключи
+            all_keys = set(incoming.keys()) | set(outgoing.keys())
+
+            result = []
+            for key in all_keys:
+                nomenclature_id, range_id = key
+                # Получаем нужную номенклатуру
+                nomenclature = next(
+                    (nomenclature for nomenclature in repository.data.get(repository.nomenclatures_key(), []) if
+                     nomenclature.id == nomenclature_id),
+                    None
+                )
+                # Получаем нужную единицу измерения
+                range = next(
+                    (range for range in repository.data.get(repository.ranges_key(), []) if range.id == range_id),
+                    None
+                )
+
+                inc = incoming.get(key, 0.0)
+                out = outgoing.get(key, 0.0)
+                closing =  inc - out
+
+                dto = osv_item_dto()
+                dto.storage_id = storage_id
+                dto.storage_name = storage_name
+                dto.nomenclature_id = nomenclature_id
+                dto.nomenclature_name = nomenclature.name if nomenclature else ""
+                dto.range_id = range_id
+                dto.range_name = range.name if range else ""
+                dto.incoming = inc
+                dto.outgoing = out
+                dto.closing_balance = closing
+
+                result.append(dto)
+
+            # Дополнительная обработка
+            prototype_result = prototype(result)
+            filtered_result = prototype.multi_transforming(prototype_result, transform_dict)
+
+            after_period_osv = filtered_result.data
 
             result_osv = []
             index_by_nomenclature = {}
             # Объединяем osv
             for item in period_osv + after_period_osv:
                 key = item.nomenclature_id
+                print(key)
                 # Если уже есть такая номенклатура объединяем osv по числовым полям
                 if key in index_by_nomenclature:
                     existing = index_by_nomenclature[key]
@@ -287,6 +366,7 @@ class osv_calculator:
                         v1 = getattr(existing, setter)
                         v2 = getattr(item, setter)
                         if isinstance(v1, (int, float)) and isinstance(v2, (int, float)):
+                            print(v1, v2)
                             setattr(existing, setter, v1 + v2)
                 # Добавляем копию osv под номенклатуру
                 else:
