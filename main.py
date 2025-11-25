@@ -4,16 +4,19 @@ from enum import Enum
 from Src.start_service import start_service
 from Src.Core.response_format import response_formats  # перечисление форматов
 from Src.Logics.factory_entities import factory_entities  # фабрика форматов
+from Src.Logics.convert_factory import convert_factory
 
 # иницилизация api
 app = FastAPI()
 
 # смписок всех доступных форматов
 response_formats_arr = response_formats.all_formats()
+# фабрика перевода объектов в dict
+dict_factory = convert_factory()
 
 # создаём и запускаем сервис
 service = start_service()
-service.filename = "settings.json"
+service.file_name = "settings.json"
 try:
     service.start()
 except Exception as e:
@@ -38,6 +41,36 @@ def get_data(repo_key: RepoKeyEnum, format: str = Query("json", enum=response_fo
         return PlainTextResponse(content=formatted_content)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/catalogs")
+def get_catalogs():
+    # Возвращает весь справочник в json с использованием фабрики
+    settings_json = service.settings()
+    return JSONResponse(content=settings_json)
+
+@app.get("/receipts")
+def get_receipts():
+    receipts_list = service.repository.data.get("receipts", [])
+    # Перевести в dto, получить только нужные поля
+    result_json = [
+        {
+            "id": r.id,
+            "name": r.name
+        }
+        for r in receipts_list if hasattr(r, "id") and hasattr(r, "name")
+    ]
+    return JSONResponse(content=result_json)
+
+
+@app.get("/receipt/{receipt_id}")
+def get_receipt(receipt_id: str):
+    # Ищем рецепт по id среди рецептов
+    for receipt in service.repository.data.get(service.repository.receipts_key(), []):
+        print(len(receipt.receipt_items))
+        if getattr(receipt, "id", None) == receipt_id:
+            result_json = dict_factory.create(receipt).to_dict()
+            return JSONResponse(content=result_json)
+    raise HTTPException(status_code=404, detail="Receipt not found")
 
 
 @app.get("/")

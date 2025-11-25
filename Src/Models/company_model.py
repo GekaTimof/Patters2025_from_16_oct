@@ -66,7 +66,9 @@ class company_model(entity_model):
         validator.validate(value, str, 5)
         self.__ownership = value.strip()
 
-
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()
 
 
 

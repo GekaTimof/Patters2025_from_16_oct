@@ -8,7 +8,7 @@ from Src.Dtos.group_dto import group_dto
 class group_model(entity_model):
     __dto_type = group_dto
 
-    # подходящий тип dto
+    # Подходящий тип dto
     @property
     def dto_type(self) -> abstact_dto:
         return self.__dto_type
@@ -22,3 +22,7 @@ class group_model(entity_model):
         item.name = dto.name
         item.id = dto.id
         return item
+
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

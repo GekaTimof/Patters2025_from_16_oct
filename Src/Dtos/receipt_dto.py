@@ -1,30 +1,30 @@
 from Src.Core.abstract_dto import abstact_dto
 from Src.Core.common import common
-from Src.Core.validator import validator
+from Src.Core.validator import validator, operation_exception
 
 # Модель рецепта (dto)
 # Пример
 #                "name":"Грамм",
 #                "id":"adb7510f-687d-428f-a697-26e53d3f65b7",
 #                "portions": 1,
+#                "cooking_time": "15 минут"
 #                "receipt_items": []
 #                "steps":" []
-#                "cooking_time": "15 минут"
 
 class receipt_dto(abstact_dto):
-    __portion: int = 0
+    __portions: int = 0
+    __cooking_time: str = ""
     __steps: list = []
     __receipt_items: list = []
-    __cooking_time: str = ""
 
 
     @property
-    def portion(self) -> int:
-        return self.__portion
+    def portions(self) -> int:
+        return self.__portions
 
-    @portion.setter
-    def portion(self, value: int):
-        self.__portion = value
+    @portions.setter
+    def portions(self, value: int):
+        self.__portions = value
 
 
     @property

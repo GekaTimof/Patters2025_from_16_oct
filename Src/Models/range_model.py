@@ -83,3 +83,7 @@ class range_model(entity_model):
         base = cache[dto.base_id] if dto.base_id in cache else None
         item = range_model.create(dto.name, dto.value, base)
         return item
+
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

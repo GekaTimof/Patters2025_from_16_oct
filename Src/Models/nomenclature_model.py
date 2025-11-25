@@ -66,3 +66,7 @@ class nomenclature_model(entity_model):
         group = cache[dto.group_id] if dto.group_id in cache else None
         item = nomenclature_model.create(dto.name, group, range)
         return item
+
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

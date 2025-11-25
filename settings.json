@@ -62,10 +62,10 @@
     ],
     "receipts": [
       {
-        "cooking_time": "20 мин",
         "id": "1d2fffe31bc84df28daa303820759666",
         "name": "ВАФЛИ ХРУСТЯЩИЕ В ВАФЕЛЬНИЦЕ",
-        "portion": 0,
+        "portions": 1,
+        "cooking_time": "20 мин",
         "receipt_items": [
           {
             "id": "134d8093790147be923074761a379e13",

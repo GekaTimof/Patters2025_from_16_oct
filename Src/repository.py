@@ -38,6 +38,13 @@ class reposity:
         return "receipts"
 
     """
+    Ключ для компонент рецептов
+    """
+    @staticmethod
+    def receipt_items_key():
+        return "receipt_items"
+
+    """
     Получить список всех ключей
     """
     @staticmethod

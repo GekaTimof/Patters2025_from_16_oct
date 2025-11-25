@@ -3,6 +3,7 @@ from Src.Models.nomenclature_model import nomenclature_model
 from Src.Models.range_model import range_model
 from Src.Core.validator import validator
 from Src.Dtos.receipt_item_dto import receipt_item_dto
+from Src.Core.validator import argument_exception
 
 # Модель элемента рецепта
 class receipt_item_model(abstact_model):
@@ -64,3 +65,7 @@ class receipt_item_model(abstact_model):
         range = cache[dto.range_id] if dto.range_id in cache else None
         item = receipt_item_model.create(nomenclature, range, dto.value)
         return item
+
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

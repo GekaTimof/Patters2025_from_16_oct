@@ -17,3 +17,6 @@ class settings_model:
         validator.validate(value, company_model)
         self.__company = value
 
+    # Переобразовать в dto
+    def to_dto(self):
+        return super().to_dto()

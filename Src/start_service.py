@@ -11,6 +11,7 @@ from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.Dtos.range_dto import range_dto
 from Src.Dtos.group_dto import group_dto
 from Src.Dtos.receipt_item_dto import receipt_item_dto
+from Src.Dtos.receipt_dto import receipt_dto
 from Src.Logics.convert_factory import convert_factory
 
 
@@ -22,13 +23,15 @@ class start_service:
     # Ключ - id записи, значение - abstract_model
     __cache = {}
 
-    # Наименование файла (полный путь)
-    __full_file_name: str = "settings.json"
+    # Наименование файла для загрузки настроек (полный путь)
+    __load_file_name: str = "settings.json"
+    # Наименование файла для сохранения настроек (полный путь)
+    __save_file_name: str = "settings_my.json"
 
     def __init__(self):
         self.__repo.initalize()
 
-    # Singletone
+    # Single-tone
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(start_service, cls).__new__(cls)
@@ -44,59 +47,81 @@ class start_service:
     def repository(self):
         return self.__repo
 
-    # Текущий файл
+    # Текущий файл зпугрузки настроек
     @property
-    def file_name(self) -> str:
-        return self.__full_file_name
+    def load_file_name(self) -> str:
+        return self.__load_file_name
 
-    # Полный путь к файлу настроек
-    @file_name.setter
-    def file_name(self, value: str):
+
+    # Полный путь к файлу для загрузки настроек
+    @load_file_name.setter
+    def load_file_name(self, value: str):
         validator.validate(value, str)
-        full_file_name = os.path.abspath(value)
-        if os.path.exists(full_file_name):
-            self.__full_file_name = full_file_name.strip()
+        file_name = os.path.abspath(value)
+        if os.path.exists(file_name):
+            self.__load_file_name = file_name.strip()
         else:
-            raise argument_exception(f'Не найден файл настроек {full_file_name}')
+            raise argument_exception(f'Не найден файл настроек {file_name}')
+
+
+    # Текущий файл сохранения настроек
+    @property
+    def save_file_name(self) -> str:
+        return self.__save_file_name
+
+    # Полный путь к файлу для сохранения настроек
+    @save_file_name.setter
+    def save_file_name(self, value: str):
+        validator.validate(value, str)
+        save_file_name = os.path.abspath(value)
+
+        if not os.path.isfile(save_file_name):
+            raise argument_exception(f'Путь не является файлом: {save_file_name}')
+
+        self.__save_file_name = save_file_name.strip()
+
 
     # Текущая конфигурация
     def settings(self) -> str:
         factory = convert_factory()
-        settings_json = factory.create_json_settings(self)
+        settings_json = self.create_json_settings(self)
         return settings_json
 
     # Загрузить настройки из Json файла
     def load(self) -> bool:
-        if self.__full_file_name == "":
+        if self.__load_file_name == "":
             raise operation_exception("Не найден файл настроек!")
 
         # try:
-        with open(self.__full_file_name, 'r') as file_instance:
+        with open(self.__load_file_name, 'r') as file_instance:
             settings = json.load(file_instance)
 
             # получаем данные о компании
             # ***
 
-            # пролучаем repository
-            repository = settings["repository"]
+            # пролучаем repository - данные о компании
+            repository_json = settings["repository"]
 
             # получаем общие данные
-            self.__convert_ranges(repository)
-            self.__convert_groups(repository)
-            self.__convert_nomenclatures(repository)
+            self.__convert_ranges(repository_json)
+            self.__convert_groups(repository_json)
+            self.__convert_nomenclatures(repository_json)
+            self.__convert_receipts(repository_json)
 
-            # получаем рецепты
-            if reposity.receipts_key() in repository.keys():
+            return True
 
-                # получаем список рецептов
-                receipts = repository[reposity.receipts_key()]
-                # конвертируем все рецепты
-                for receipt in receipts:
-                    if not self.convert(receipt):
-                        return False
-                return True
-            else:
-                return False
+            # # получаем рецепты
+            # if reposity.receipts_key() in repository.keys():
+            #
+            #     # получаем список рецептов
+            #     receipts = repository[reposity.receipts_key()]
+            #     # конвертируем все рецепты
+            #     for receipt in receipts:
+            #         if not self.__convert_receipt(receipt):
+            #             return False
+            #     return True
+            # else:
+            #     return False
         # except Exception as e:
         #     error_message = str(e)
         #     print(error_message)
@@ -152,61 +177,78 @@ class start_service:
         return True
 
     # Обработать полученный словарь
-    def convert(self, data: dict) -> bool:
+    def __convert_receipts(self, data: dict) -> bool:
         validator.validate(data, dict)
-
-        # 1 Созданим рецепт
-        cooking_time = data['cooking_time'] if 'cooking_time' in data else ""
-        portions = int(data['portions']) if 'portions' in data else 0
-        name = data['name'] if 'name' in data else "НЕ ИЗВЕСТНО"
-        id = data['id'] if 'id' in data else None
-        receipt: receipt_model = receipt_model.create(id, name, cooking_time, portions)
-
-        # Загрузим шаги приготовления
-        steps = data['steps'] if 'steps' in data else []
-        for step in steps:
-            if step.strip() != "":
-                receipt.steps.append(step)
-
-        # Загружаем ингридиенты
-        receipt_items = data['receipt_items'] if 'receipt_items' in data else []
-        if len(receipt_items) == 0:
+        receipts = data[reposity.receipts_key()] if reposity.receipts_key() in data else []
+        if len(receipts) == 0:
             return False
 
-        for receipt_item in receipt_items:
-            dto = receipt_item_dto().create(receipt_item)
-            item = receipt_item_model.from_dto(dto, self.__cache)
-            receipt.receipt_items.append(item)
+        for receipt in receipts:
+            # Получаем информацию о рецепте
+            id = receipt['id'] if 'id' in receipt else None
+            name = receipt['name'] if 'name' in receipt else "НЕ ИЗВЕСТНО"
+            portions = int(receipt['portions']) if 'portions' in receipt else 0
+            cooking_time = receipt['cooking_time'] if 'cooking_time' in receipt else ""
 
-        # Сохраняем рецепт
-        self.__repo.data[reposity.receipts_key()].append(receipt)
+            # Создаём рецепт
+            receipt_full = receipt_model().create(id, name, portions, cooking_time)
+
+            # Загружаем ингридиенты
+            receipt_items = receipt[reposity.receipt_items_key()] if reposity.receipt_items_key() in receipt else []
+            if len(receipt_items) == 0:
+                return False
+
+            for receipt_item in receipt_items:
+                dto = receipt_item_dto().create(receipt_item)
+                item = receipt_item_model.from_dto(dto, self.__cache)
+                # Созраняем ингридиент в репозиторий
+                self.__save_item(reposity.receipt_items_key(), dto, item)
+                receipt_full.receipt_items.append(item)
+
+            # Загрузим шаги приготовления
+            steps = receipt['steps'] if 'steps' in receipt else []
+            for step in steps:
+                if step.strip() != "":
+                    receipt_full.steps.append(step)
+
+            # Сохраняем рецепт в репозиторий
+            self.__repo.data[reposity.receipts_key()].append(receipt_full)
         return True
 
-    """
-    Стартовый набор данных
-    """
+
+    # Метод конвертирующий и возвращающий данные из репозитория в формате json
+    def create_json_settings(self, service) -> str:
+        factory = convert_factory()
+
+        result_json = {}
+        result_json["is_firs_start"] = False
+        result_json["company"] = {}
+        result_json["repository"] = factory.create_dict_from_dto(service.repository.data)
+        return json.dumps(result_json, ensure_ascii=False, indent=2)
+
+
+    # Возврашщаем данные из репзитория
     @property
     def data(self):
         return self.__repo.data
+
 
     # метод сохранения сервиса в файл
     def save_settings_to_file(self):
         settings_json = self.settings()
 
         # Открываем файл для записи в текстовом режиме с нужной кодировкой
-        with open("settings_my.json", "w", encoding="utf-8") as f:
+        with open(self.__save_file_name, "w", encoding="utf-8") as f:
             f.write(settings_json)
 
-    """
-    Основной метод для генерации эталонных данных
-    """
+
+    # Основной метод для загрузки данных сервиса из файла
     def start(self):
         result = self.load()
         if result == False:
             raise operation_exception("Невозможно сформировать стартовый набор данных!")
 
-    """
-    Основной метод для отключения сервера и сохранения данных из репозитория
-    """
+
+    # Основной метод для отключения сервера и сохранения данных из репозитория
     def stop(self):
         self.save_settings_to_file()
