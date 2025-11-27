@@ -57,7 +57,7 @@ class test_block_osv_calculator(unittest.TestCase):
     # -есть нужные поля и отношения между ними соответствуют ожиданиям
     def test_turnover_balance_correctness(self):
         end_date = "2027-01-01"
-        storage_id = "5361b6c103144bbd81e6e9cd03ec600a"
+        storage_id = "fc5ab65500f54f7d843684856e836e77"
 
         turnover = self.osv_calculator.calculate_osv_with_block(end_date, storage_id)
 

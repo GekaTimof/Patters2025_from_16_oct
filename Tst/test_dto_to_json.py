@@ -12,7 +12,11 @@ class TestCreateReceiptDict(unittest.TestCase):
 
         # создание фабрики
         factory = convert_factory()
-        receipt_dict = factory.create_dict_from_dto(repository.data)
+        non_settings_data = repository.data.copy()
+        setting_keys = repository.setting_keys()
+        for setting_key in setting_keys:
+            non_settings_data.pop(setting_key, None)
+        receipt_dict = factory.create_dict_from_dto(non_settings_data)
 
         # Проверяем, что ключи совпадают с ключами репозитория
         self.assertSetEqual(set(receipt_dict.keys()), set(repository.keys()))
