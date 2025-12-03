@@ -1,6 +1,8 @@
 {
-  "is_firs_start": false,
-  "company": {},
+  "settings": {
+    "block_period": "2025-01-01",
+    "is_firs_start": false
+  },
   "repository": {
     "groups": [
       {
@@ -231,6 +233,51 @@
         "name": "",
         "nomenclature_id": "fc389d90-2c41-4495-8d04-56d75acff008",
         "range_id": "adb7510f-687d-428f-a697-26e53d3f65b7",
+        "storage_id": "5361b6c103144bbd81e6e9cd03ec600a"
+      },
+      {
+        "amount": "61",
+        "date": "2023-03-08 00:00:00",
+        "id": "fe7ef292e7ed470aad567c91a38b26dc",
+        "name": "",
+        "nomenclature_id": "de92caf7-731c-44cf-a9f4-31237e6fe707",
+        "range_id": "f8346e8b-7260-4db8-a673-c8c826ab08b7",
+        "storage_id": "fc5ab65500f54f7d843684856e836e77"
+      },
+      {
+        "amount": "33",
+        "date": "2023-04-11 00:00:00",
+        "id": "747e9e1138244672afd413a0d841f780",
+        "name": "",
+        "nomenclature_id": "0c101a7e-5934-4155-83a6-d2c388fcc11a",
+        "range_id": "a33dd457-36a8-4de6-b5f1-40afa6193346",
+        "storage_id": "5361b6c103144bbd81e6e9cd03ec600a"
+      },
+      {
+        "amount": "33",
+        "date": "2023-05-11 00:00:00",
+        "id": "8f653a1f351d42108a02cc582cf49f79",
+        "name": "",
+        "nomenclature_id": "0c101a7e-5934-4155-83a6-d2c388fcc11a",
+        "range_id": "a33dd457-36a8-4de6-b5f1-40afa6193346",
+        "storage_id": "5361b6c103144bbd81e6e9cd03ec600a"
+      },
+      {
+        "amount": "78",
+        "date": "2023-07-30 00:00:00",
+        "id": "ab0d09c49a094a77a9a8c5e1e7f576e0",
+        "name": "",
+        "nomenclature_id": "de92caf7-731c-44cf-a9f4-31237e6fe707",
+        "range_id": "a33dd457-36a8-4de6-b5f1-40afa6193346",
+        "storage_id": "481e3f5f483c41cdbf8bf2ce19fea8bd"
+      },
+      {
+        "amount": "44",
+        "date": "2021-11-11 00:00:00",
+        "id": "79470f78b3da4e0f94e0365496bd1384",
+        "name": "",
+        "nomenclature_id": "3ce75449-05e8-4921-9310-9bcd0be7095b",
+        "range_id": "a33dd457-36a8-4de6-b5f1-40afa6193346",
         "storage_id": "5361b6c103144bbd81e6e9cd03ec600a"
       }
     ]

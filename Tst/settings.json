@@ -1,6 +1,8 @@
 {
-  "is_firs_start": false,
-  "company": {},
+  "settings": {
+    "block_period": "2025-01-01",
+    "is_firs_start": false
+  },
   "repository": {
     "groups": [
       {

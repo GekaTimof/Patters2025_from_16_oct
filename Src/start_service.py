@@ -1,4 +1,6 @@
+from datetime import datetime
 from Src.Core.abstract_dto import abstract_dto
+from Src.Core.common import common
 from Src.Dtos.storage_dto import storage_dto
 from Src.Dtos.transaction_dto import transaction_dto
 from Src.Models.storage_model import storage_model
@@ -19,6 +21,8 @@ from Src.Dtos.receipt_item_dto import receipt_item_dto
 from Src.Dtos.receipt_dto import receipt_dto
 from Src.Logics.factory_convert import convert_factory
 from Src.Core.abstract_model import abstact_model
+from Src.Logics.osv_calculator import osv_calculator
+from Src.Dtos.osv_item_dto import osv_item_dto
 
 
 class start_service:
@@ -107,10 +111,14 @@ class start_service:
             settings = json.load(file_instance)
 
             # Получаем данные о компании
-            # ***
+            settings_json= settings["settings"]
+            for setting_key in reposity.setting_keys():
+                if setting_key in settings_json.keys():
+                    setting = settings_json[setting_key]
+                    self.repository.data[setting_key] = setting
 
             # Пролучаем repository - данные о компании
-            repository_json= settings["repository"]
+            repository_json = settings["repository"]
 
             # Загружаем общие данные (через шаблонную конвертацию)
             for (key, dto, model) in self.__generic_convert_pairs:
@@ -198,12 +206,53 @@ class start_service:
     # Метод конвертирующий и возвращающий данные из репозитория в формате json
     def __create_json_settings(self) -> str:
         factory = convert_factory()
-
         result_json = {}
-        result_json["is_firs_start"] = False
-        result_json["company"] = {}
-        result_json["repository"] = factory.create_dict_from_dto(self.repository.data)
+
+        # Загружаем данные о настроек
+        settings_data = {}
+        for setting_key in self.repository.setting_keys():
+            setting = self.repository.data[setting_key]
+            settings_data[setting_key] = setting
+        result_json["settings"] = settings_data
+
+        # Загружаем данные из репозитория (без настроек)
+        non_settings_data = self.repository.data.copy()
+        setting_keys = reposity.setting_keys()
+        for setting_key in setting_keys:
+            non_settings_data.pop(setting_key, None)
+
+        result_json["repository"] = factory.create_dict_from_dto(non_settings_data)
         return json.dumps(result_json, ensure_ascii=False, indent=2)
+
+
+    # Расчёт результата транзакций за период и сохранение в кэш
+    def calculate_block_period(self) -> bool:
+        period = self.repository.data[self.repository.block_period_setting_key()]
+        storages = self.repository.data[reposity.storages_key()]
+        calculator = osv_calculator(self.repository)
+
+        # Для каждого склада считаем остатки по каждой номенклатуре
+        period_osv_dict = {}
+        for storage in storages:
+            storage_id = storage.id
+            period_osv = calculator.calculate_osv(
+                storage_id=storage_id,
+                start_date="1990-01-01",
+                end_date=period
+            )
+            period_osv_dict[storage_id] = period_osv
+
+        self.repository.add_cache_item(reposity.cache_period_osv_key(), period_osv_dict)
+        return True
+
+
+    # Смена периода блокировки и перерасчёт результата транзакций
+    def change_block_period(self, new_period: str):
+        # Проверяем, что конвертация в дату не вызывает ошибки
+        common.convert_to_date(new_period)
+
+        self.repository.data[reposity.block_period_setting_key()] = new_period
+        self.calculate_block_period()
 
 
     # метод сохранения сервиса в файл
@@ -217,9 +266,14 @@ class start_service:
 
     # Основной метод для загрузки данных сервиса из файла
     def start(self):
+        # Загрузка данных
         result = self.load()
         if result == False:
             raise operation_exception("Невозможно сформировать стартовый набор данных!")
+
+        # Расчёт результата транзакций за период
+        if not self.calculate_block_period():
+            raise operation_exception("Невозможно расчитать транзакции до периода блокировки!")
 
 
     # Основной метод для отключения сервера и сохранения данных из репозитория

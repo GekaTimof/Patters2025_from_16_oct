@@ -59,3 +59,19 @@ class abstract_dto(metaclass=abc.ABCMeta):
     # Перевод в строку json
     def to_json_string(self) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
+
+
+    def copy(self):
+        cls = self.__class__
+        # создаем новый объект без данных
+        new_obj = cls.__new__(cls)
+        fields = common.get_setters(self)  # предполагается, что это список полей DTO
+
+        for field in fields:
+            value = getattr(self, field, None)
+            # если поле поддерживает copy, копируем рекурсивно, иначе просто копируем значение
+            if hasattr(value, 'copy') and callable(value.copy):
+                setattr(new_obj, field, value.copy())
+            else:
+                setattr(new_obj, field, value)
+        return new_obj

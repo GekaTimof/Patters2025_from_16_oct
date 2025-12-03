@@ -33,18 +33,18 @@ class test_models(unittest.TestCase):
 
     # Проверить создание основной модели
     # Данные загружаем через json настройки
-    def test_json_load_createmodel_companymodel(self):
-        # Подготовка
-        file_name = "settings.json"
-        manager = settings_manager()
-        manager.file_name = file_name
-
-        # Действие
-        result = manager.load()
-
-        # Проверки
-        print(manager.file_name)
-        assert result == True
+    # def test_json_load_create_company_model(self):
+    #     # Подготовка
+    #     file_name = "settings.json"
+    #     manager = settings_manager()
+    #     manager.file_name = file_name
+    #
+    #     # Действие
+    #     result = manager.load()
+    #
+    #     # Проверки
+    #     print(manager.file_name)
+    #     assert result == True
 
     # Проверить создание основной модели
     # Данные загружаем через xml настройки

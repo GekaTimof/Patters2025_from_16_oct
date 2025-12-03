@@ -30,6 +30,35 @@ class reposity:
         if item_id is not None and item_id not in self.__cache:
             self.__cache[item_id] = item
 
+
+    # добавление элемента в cache
+    def add_cache_item(self, key: str, item):
+        self.__cache[key] = item
+
+    """
+    Ключ (настройки) для периода блокировки блокировки
+    """
+    @staticmethod
+    def block_period_setting_key():
+        return "block_period"
+
+
+
+    """
+    Ключ (настройки) для указания был ли произведён запуск
+    """
+    @staticmethod
+    def is_firs_start_setting_key():
+        return "is_firs_start"
+
+    """
+    Ключ (настройки) для хранения
+    """
+    @staticmethod
+    def cache_period_osv_key():
+        return "period_osv"
+
+
     """
     Ключ для единц измерений
     """
@@ -93,18 +122,38 @@ class reposity:
     def keys() -> list:
         result = []
         methods = [method for method in dir(reposity) if
-            callable(getattr(reposity, method)) and method.endswith('_key')]
+            callable(getattr(reposity, method)) and
+                   not method.startswith("cache_") and
+                   not method.endswith('_setting_key') and
+                   method.endswith('_key')]
         for method in methods:
             key = getattr(reposity, method)()
             result.append(key)
-
         return result
+
+    """
+    Получить список всех ключей нестроек сервиса
+    """
+    @staticmethod
+    def setting_keys() -> list:
+        result = []
+        methods = [method for method in dir(reposity) if
+            callable(getattr(reposity, method)) and method.endswith('_setting_key')]
+        for method in methods:
+            key = getattr(reposity, method)()
+            result.append(key)
+        return result
+
 
     # Инициализация
     def initialize(self):
         keys = reposity.keys()
         for key in keys:
             self.__data[key] = []
+
+        keys = reposity.setting_keys()
+        for key in keys:
+            self.__data[key] = None
 
 
     # Получение элемента по его id
