@@ -23,11 +23,19 @@ from Src.Logics.factory_convert import convert_factory
 from Src.Core.abstract_model import abstact_model
 from Src.Logics.osv_calculator import osv_calculator
 from Src.Dtos.osv_item_dto import osv_item_dto
+from Src.Services.logger import logger
+from Src.Core.observer import observer
 
 
 class start_service:
     # Репозиторий
     __repo: reposity = reposity()
+
+    # Логер
+    __logger: logger
+
+    # Наблюдатель
+    __observer: observer
 
     # Массив пар для загрузки шаблонных данных в __convert_generic
     __generic_convert_pairs = [
@@ -52,10 +60,23 @@ class start_service:
             cls.instance = super(start_service, cls).__new__(cls)
         return cls.instance
 
-    # Возврашщаем данные репозитория
-    @property
-    def repo_data(self):
-        return self.__repo.data
+    # Создаём лог (текст, тип лога)
+    def log(self, message, log_type):
+        return self.__logger.log(
+            message=message,
+            log_type=log_type
+        )
+
+
+    # Создаём событие через наблюдатель
+    def event(self, event: str, dto):
+        return self.__observer.event(
+            repository=self.repository,
+            event=event,
+            dto=dto,
+            service_logger=self.__logger
+        )
+
 
     # получить рапозиторий целиком
     @property
@@ -100,6 +121,30 @@ class start_service:
     def settings(self) -> str:
         settings_json = self.__create_json_settings()
         return settings_json
+
+    # Создание логера
+    def set_logger(self) -> bool:
+        try:
+            self.__logger = logger({
+                logger.log_type_setting_key(): self.repository.data[reposity.log_type_setting_key()],
+                logger.log_path_setting_key(): "logs/service.log",
+                logger.show_info_logs_setting_key(): self.repository.data[reposity.show_info_logs_setting_key()],
+                logger.show_warning_logs_setting_key(): self.repository.data[reposity.show_errors_logs_setting_key()],
+                logger.show_errors_logs_setting_key(): self.repository.data[reposity.show_warning_logs_setting_key()]
+            })
+
+            return True
+        except:
+            return False
+
+    # Создание наблюдателя
+    def set_observer(self) -> bool:
+        try:
+            self.__observer = observer()
+
+            return True
+        except:
+            return False
 
 
     # Загрузить настройки из Json файла
@@ -274,6 +319,14 @@ class start_service:
         # Расчёт результата транзакций за период
         if not self.calculate_block_period():
             raise operation_exception("Невозможно расчитать транзакции до периода блокировки!")
+
+        # Запуск логера
+        if not self.set_logger():
+            raise operation_exception("Невозможно запустить логирование!")
+
+        # Запуск наблюдателя
+        if not self.set_observer():
+            raise operation_exception("Невозможно запустить логирование!")
 
 
     # Основной метод для отключения сервера и сохранения данных из репозитория
