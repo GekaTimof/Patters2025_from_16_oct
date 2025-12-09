@@ -137,6 +137,132 @@ class start_service:
         except:
             return False
 
+
+    # Метод для получения типа лога
+    def get_log_type(self) -> str:
+        try:
+            if self.__logger:
+                return self.__logger.settings[logger.log_type_setting_key()]
+            return ""
+        except:
+            return ""
+
+
+    # Метод для получения пути лога
+    def get_log_path(self) -> str:
+        try:
+            if self.__logger:
+                return self.__logger.settings[logger.log_path_setting_key()]
+            return ""
+        except:
+            return ""
+
+
+    # Метод для получения настройки INFO логов
+    def get_show_info_logs(self) -> bool:
+        try:
+            if self.__logger:
+                return self.__logger.settings[logger.show_info_logs_setting_key()]
+            return False
+        except:
+            return False
+
+
+    # Метод для получения настройки WARNING логов
+    def get_show_warning_logs(self) -> bool:
+        try:
+            if self.__logger:
+                return self.__logger.settings[logger.show_warning_logs_setting_key()]
+            return False
+        except:
+            return False
+
+
+    # Метод для получения настройки ERROR логов
+    def get_show_errors_logs(self) -> bool:
+        try:
+            if self.__logger:
+                return self.__logger.settings[logger.show_errors_logs_setting_key()]
+            return False
+        except:
+            return False
+
+
+    # Метод для получения всех настроек логгера
+    def get_logger_settings(self) -> dict:
+        try:
+            if self.__logger:
+                return {
+                    "log_type": self.get_log_type(),
+                    "log_path": self.get_log_path(),
+                    "show_info_logs": self.get_show_info_logs(),
+                    "show_warning_logs": self.get_show_warning_logs(),
+                    "show_errors_logs": self.get_show_errors_logs()
+                }
+            return {}
+        except:
+            return {}
+
+
+    # Метод для изменения типа лога
+    def set_log_type(self, log_type: str) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_log_type(log_type)
+                self.repository.data[reposity.log_type_setting_key()] = log_type
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения пути лога
+    def set_log_path(self, log_path: str) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_log_path(log_path)
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения отображения INFO логов
+    def set_show_info_logs(self, show_info: bool) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_show_info_logs(show_info)
+                self.repository.data[reposity.show_info_logs_setting_key()] = show_info
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения отображения WARNING логов
+    def set_show_warning_logs(self, show_warning: bool) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_show_warning_logs(show_warning)
+                self.repository.data[reposity.show_warning_logs_setting_key()] = show_warning
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения отображения ERROR логов
+    def set_show_errors_logs(self, show_error: bool) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_show_errors_logs(show_error)
+                self.repository.data[reposity.show_errors_logs_setting_key()] = show_error
+                return True
+            return False
+        except:
+            return False
+
+
     # Создание наблюдателя
     def set_observer(self) -> bool:
         try:

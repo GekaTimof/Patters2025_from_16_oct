@@ -11,12 +11,12 @@ class reposity:
 
     # все данные компании хранящиеся в репозиории в виде массивов моделей
     @property
-    def data(self):
+    def data(self) -> dict:
         return self.__data
 
     # кэш хранить id и соответствующий ему элемент
     @property
-    def cache(self):
+    def cache(self) -> dict:
         return self.__cache
 
     # добавление элемента в data, с добавлением этого же элемнта в cache
@@ -43,13 +43,46 @@ class reposity:
         return "block_period"
 
 
-
     """
     Ключ (настройки) для указания был ли произведён запуск
     """
     @staticmethod
     def is_firs_start_setting_key():
         return "is_firs_start"
+
+
+    """
+    Ключ (настройки) для указания типа логирования
+    """
+    # Тип логирования file - в файл, consol - в консоль
+    @staticmethod
+    def log_type_setting_key():
+        return "log_type"
+
+
+    """
+    Ключ (настройки) для отображения (True), сокрытия (False) логов типа INFO
+    """
+    @staticmethod
+    def show_info_logs_setting_key():
+        return "show_info_logs"
+
+
+    """
+    Ключ (настройки) для отображения (True), сокрытия (False) логов типа WARNING
+    """
+    @staticmethod
+    def show_warning_logs_setting_key():
+        return "show_warning_logs"
+
+
+    """
+    Ключ (настройки) для отображения (True), сокрытия (False) логов типа ERRORS
+    """
+    @staticmethod
+    def show_errors_logs_setting_key():
+        return "show_errors_logs"
+
 
     """
     Ключ (настройки) для хранения
