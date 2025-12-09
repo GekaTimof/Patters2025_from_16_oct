@@ -1,4 +1,5 @@
 from datetime import datetime
+from Src.Dtos.logger_settings_dto import logger_settings_dto
 from Src.Core.abstract_dto import abstract_dto
 from Src.Core.common import common
 from Src.Dtos.storage_dto import storage_dto
@@ -60,23 +61,6 @@ class start_service:
             cls.instance = super(start_service, cls).__new__(cls)
         return cls.instance
 
-    # Создаём лог (текст, тип лога)
-    def log(self, message, log_type):
-        return self.__logger.log(
-            message=message,
-            log_type=log_type
-        )
-
-
-    # Создаём событие через наблюдатель
-    def event(self, event: str, dto):
-        return self.__observer.event(
-            repository=self.repository,
-            event=event,
-            dto=dto,
-            service_logger=self.__logger
-        )
-
 
     # получить рапозиторий целиком
     @property
@@ -117,21 +101,39 @@ class start_service:
         self.__save_file_name = save_file_name.strip()
 
 
+    # Создаём лог (текст, тип лога)
+    def log(self, message, log_type):
+        return self.__logger.log(
+            message=message,
+            log_type=log_type
+        )
+
+
+    # Создаём событие через наблюдатель
+    def event(self, event: str, dto):
+        return self.__observer.event(
+            repository=self.repository,
+            event=event,
+            dto=dto,
+            service_logger=self.__logger
+        )
+
+
     # Текущая конфигурация
     def settings(self) -> str:
         settings_json = self.__create_json_settings()
         return settings_json
 
+
     # Создание логера
     def set_logger(self) -> bool:
         try:
-            self.__logger = logger({
-                logger.log_type_setting_key(): self.repository.data[reposity.log_type_setting_key()],
-                logger.log_path_setting_key(): "logs/service.log",
-                logger.show_info_logs_setting_key(): self.repository.data[reposity.show_info_logs_setting_key()],
-                logger.show_warning_logs_setting_key(): self.repository.data[reposity.show_errors_logs_setting_key()],
-                logger.show_errors_logs_setting_key(): self.repository.data[reposity.show_warning_logs_setting_key()]
-            })
+            # Создаём DTO настроек логера
+            settings_dto = logger_settings_dto()
+            settings_dto.init_from_repository(self.repository)
+
+            # Создаём логгер с DTO
+            self.__logger = logger(settings_dto)
 
             return True
         except:
@@ -142,7 +144,7 @@ class start_service:
     def get_log_type(self) -> str:
         try:
             if self.__logger:
-                return self.__logger.settings[logger.log_type_setting_key()]
+                return self.__logger.settings.log_type
             return ""
         except:
             return ""
@@ -152,7 +154,7 @@ class start_service:
     def get_log_path(self) -> str:
         try:
             if self.__logger:
-                return self.__logger.settings[logger.log_path_setting_key()]
+                return self.__logger.settings.log_path
             return ""
         except:
             return ""
@@ -162,7 +164,7 @@ class start_service:
     def get_show_info_logs(self) -> bool:
         try:
             if self.__logger:
-                return self.__logger.settings[logger.show_info_logs_setting_key()]
+                return self.__logger.settings.show_info_logs
             return False
         except:
             return False
@@ -172,7 +174,7 @@ class start_service:
     def get_show_warning_logs(self) -> bool:
         try:
             if self.__logger:
-                return self.__logger.settings[logger.show_warning_logs_setting_key()]
+                return self.__logger.settings.show_warning_logs
             return False
         except:
             return False
@@ -182,7 +184,7 @@ class start_service:
     def get_show_errors_logs(self) -> bool:
         try:
             if self.__logger:
-                return self.__logger.settings[logger.show_errors_logs_setting_key()]
+                return self.__logger.settings.show_errors_logs
             return False
         except:
             return False

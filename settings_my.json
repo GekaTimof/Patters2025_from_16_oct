@@ -2,6 +2,7 @@
   "settings": {
     "block_period": "2025-01-01",
     "is_firs_start": false,
+    "log_path": "logs/service.log",
     "log_type": "both",
     "show_info_logs": true,
     "show_warning_logs": true,

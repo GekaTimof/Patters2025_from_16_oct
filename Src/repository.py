@@ -61,6 +61,15 @@ class reposity:
 
 
     """
+    Ключ (настройки) для указания пути фохранения данных логирования
+    """
+    # Тип логирования file - в файл, consol - в консоль
+    @staticmethod
+    def log_path_setting_key():
+        return "log_path"
+
+
+    """
     Ключ (настройки) для отображения (True), сокрытия (False) логов типа INFO
     """
     @staticmethod
