@@ -22,6 +22,9 @@ from Src.Dtos.service_dto import service_dto
 from Src.Dtos.nomenclature_dto import nomenclature_dto
 from Src.Dtos.range_dto import range_dto
 from Src.Dtos.group_dto import group_dto
+from functools import wraps
+import inspect
+
 
 # иницилизация api
 app = FastAPI()
@@ -65,6 +68,66 @@ EventsModelKeyEnum = Enum('EventsModelKeyEnum', [(key, key) for key in [
     "storage",
 ]], type=str)
 
+# Enum для настроек логгера
+LoggerSettingEnum = Enum('LoggerSettingEnum', [
+    ('log_type', 'log_type'),
+    ('show_info_logs', 'show_info_logs'),
+    ('show_warning_logs', 'show_warning_logs'),
+    ('show_errors_logs', 'show_errors_logs'),
+    ('log_path', 'log_path')
+], type=str)
+
+
+# Декоратор для логирования вызова/успеха/ошибки API
+def api_log(title: str = ""):
+    def decorator(func):
+        # Обёртка для async функций
+        if inspect.iscoroutinefunction(func):
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                try:
+                    service.log(f"{title} started", "INFO")
+                except Exception:
+                    pass
+                try:
+                    result = await func(*args, **kwargs)
+                    try:
+                        service.log(f"{title} success", "INFO")
+                    except Exception:
+                        pass
+                    return result
+                except Exception as e:
+                    try:
+                        service.log(f"{title} error: {e}", "ERROR")
+                    except Exception:
+                        pass
+                    raise
+            return async_wrapper
+
+        # Обёртка для sync функций
+        @wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            try:
+                service.log(f"{title} started", "INFO")
+            except Exception:
+                pass
+            try:
+                result = func(*args, **kwargs)
+                try:
+                    service.log(f"{title} success", "INFO")
+                except Exception:
+                    pass
+                return result
+            except Exception as e:
+                try:
+                    service.log(f"{title} error: {e}", "ERROR")
+                except Exception:
+                    pass
+                raise
+        return sync_wrapper
+
+    return decorator
+
 
 # Обработчик моих ошибок — возвращает подробное сообщение с кодом 400
 @app.exception_handler(convertation_exception)
@@ -77,6 +140,7 @@ async def conversion_exception_handler(request: Request, exc: convertation_excep
 
 # Запрос для получения списка данных определённого типа из репозитория по ключу (в определённом формате)
 @app.get("/data/get/items/{repo_key}")
+@api_log("GET /data/get/items")
 def get_data(repo_key: RepoKeyEnum, format: str = Query("json", enum=response_formats_arr)):
     try:
         if repo_key not in repo_keys:
@@ -97,6 +161,7 @@ def get_data(repo_key: RepoKeyEnum, format: str = Query("json", enum=response_fo
 
 # Запрос для получения списка данных c фильтрацией и сортировкой в формате json
 @app.post("/data/get/items/{repo_key}")
+@api_log("POST /data/get/items")
 def post_data(
     repo_key: RepoKeyEnum,
     format: str = Query("json", enum=response_formats_arr),
@@ -123,6 +188,7 @@ def post_data(
 
 # Запрос для получения списка настроек c фильтрацией и сортировкой в формате json
 @app.post("/data/get/settings/{repo_key}")
+@api_log("POST /data/get/settings")
 def post_settings(
     setting_key: SettingsKeyEnum,
     format: str = Query("json", enum=response_formats_arr),
@@ -134,18 +200,16 @@ def post_settings(
 
         data = service.repo_data[setting_key]
 
-        # Если это список, который можно преобразовать - прелбразовываем
+        # Если это список, который можно преобразовать - преобразовываем
         if type(data) == list:
             prototype_data = prototype(data)
             prototype_filtered_data = prototype.multi_transforming(prototype_data, transform_dict)
             data = prototype_filtered_data.data
-
             conv_factory = convert_factory()
             data = conv_factory.create_dict_from_dto(data)
 
         factory = factory_entities()
         formatted_content = factory.create_default(format, data)
-
         return PlainTextResponse(content=formatted_content)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -153,166 +217,15 @@ def post_settings(
 
 # Получить json со всеми данными фабрики
 @app.get("/data/get/settings")
+@api_log("GET /data/get/settings")
 def get_settings():
     settings_json = service.settings()
     return PlainTextResponse(content=settings_json)
 
 
-# Получить список всех рецептов и их id
-@app.get("/data/get/receipts_list")
-def get_receipts_list():
-    receipts_list = service.repository.data.get(service.repository.receipts_key(), [])
-    # Перевести в dto, получить только нужные поля
-    result_json = [
-        {
-            "id": receipt.id,
-            "name": receipt.name
-        }
-        for receipt in receipts_list if hasattr(receipt, "id") and hasattr(receipt, "name")
-    ]
-    return JSONResponse(content=result_json)
-
-
-# Получить информацию о конкретном рецепте по его id
-@app.get("/data/get/receipt/{receipt_id}")
-def get_receipt(receipt_id: str):
-    # Ищем рецепт по id среди рецептов
-    for receipt in service.repository.data.get(service.repository.receipts_key(), []):
-        if getattr(receipt, "id", None) == receipt_id:
-            result_json = dict_factory.create(receipt).to_dict()
-            return JSONResponse(content=result_json)
-    raise HTTPException(status_code=404, detail="Рецепт не найден")
-
-
-# Получить оборотно-сальдовую ведомость за период по выбранному складу (с учётом блокировки).
-# Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком.
-# Поддержка различных форматов вывода (json, csv, markdown и т.д.).
-@app.post("/report/get/osv_with_block")
-def report_osv_with_block(
-    end_date: str = Query(..., description="Дата окончания, формат YYYY-MM-DD"),
-    storage_id: str = Query(..., description="ID склада"),
-    format: str = Query("json", enum=response_formats_arr),
-    transform_dict: dict = Body({})
-):
-    balance_calculator = osv_calculator(service.repository)
-    formatted_result = balance_calculator.format_osv_report(
-        end_date=end_date,
-        storage_id=storage_id,
-        format=format,
-        transform_dict=transform_dict
-    )
-    return PlainTextResponse(content=formatted_result)
-
-
-# Получить оборотно-сальдовую ведомость за период по выбранному складу (за период блоктровки).
-# Поддержка различных форматов вывода (json, csv, markdown и т.д.).
-@app.post("/report/get/osv_block_period")
-def report_osv_block_period(
-    format: str = Query("json", enum=response_formats_arr),
-):
-    period_osv = service.repository.cache[service.repository.cache_period_osv_key()]
-
-    # Конвертируем в нужный формат
-    factory = factory_entities()
-    formatted_content = factory.create_default(format, period_osv)
-
-    return PlainTextResponse(content=formatted_content)
-
-
-# Получить оборотно-сальдовую ведомость за период по выбранному складу.
-# Возвращает агрегированные данные с начальным остатком, приходом, расходом и конечным остатком.
-# Поддержка различных форматов вывода (json, csv, markdown и т.д.).
-@app.post("/report/get/osv")
-def report_osv(
-    start_date: str = Query(..., description="Дата начала, формат YYYY-MM-DD"),
-    end_date: str = Query(..., description="Дата окончания, формат YYYY-MM-DD"),
-    storage_id: str = Query(..., description="ID склада"),
-    format: str = Query("json", enum=response_formats_arr),
-    transform_dict: dict = Body({})
-):
-    balance_calculator = osv_calculator(service.repository)
-    formatted_result = balance_calculator.format_osv_report(
-        start_date=start_date,
-        end_date=end_date,
-        storage_id=storage_id,
-        format=format,
-        transform_dict=transform_dict
-    )
-    return PlainTextResponse(content=formatted_result)
-
-
-# Смена периода блокировки и перерасчёт результата транзакций
-@app.put("/report/set/block_period")
-def set_block_period(
-    block_period: str = Query(..., description="Дата окончания, формат YYYY-MM-DD"),
-):
-    service.change_block_period(block_period)
-    return PlainTextResponse(content=f"Установлен новый период блокировки, block_period: {block_period}")
-
-
-# Запрос на добавление нового склада
-@app.put("/data/put/storage")
-def put_storage(name: str, address: str):
-    # приводим строки к стандартному виду
-    name.strip().lower()
-    address.strip().lower()
-
-    # Проверяем, нет ли уже такого склада в репозитории
-    for storage in service.repo_data[service.repository.storages_key()]:
-        if storage.name == name and storage.address == address:
-            return PlainTextResponse(content=f"Склад уже существует, id: {storage.id}")
-
-    dto = storage_dto()
-    dto.name = name
-    dto.address = address
-    item = storage_model.from_dto(dto, service.repo_data)
-
-    service.add_item_to_repository(service.repository.storages_key(), item)
-    return PlainTextResponse(content=f"Склад добавлен, id: {item.id}")
-
-
-# Запрос на добавление новой транзакции
-@app.put("/data/put/transaction")
-def put_transaction(date: str, storage_id: str, nomenclature_id: str, amount: int, range_id: str):
-    # Проверяем что нужные данные есть в репозитории
-    repo_data = service.repo_data
-    if not storage_id in [i.id for i in repo_data[service.repository.storages_key()]]:
-        raise HTTPException(status_code=404, detail="Склад не найден")
-    if not nomenclature_id in [i.id for i in repo_data[service.repository.nomenclatures_key()]]:
-        raise HTTPException(status_code=404, detail="Номенклатура не найден")
-    if not range_id in [i.id for i in repo_data[service.repository.ranges_key()]]:
-        raise HTTPException(status_code=404, detail="Единица измерения не найден")
-
-    # Конвертируем дату в текст
-    try:
-        date_obj = common.convert_to_date(date)
-    except ValueError as e:
-        return PlainTextResponse(content=str(e))
-
-    dto = transaction_dto()
-    dto.date = date
-    dto.storage_id = storage_id
-    dto.nomenclature_id = nomenclature_id
-    dto.amount = amount
-    dto.range_id = range_id
-
-    item = transaction_model.from_dto(dto, service.repository.cache)
-    service.add_item_to_repository(service.repository.transactions_key(), item)
-    return PlainTextResponse(content=f"Транзакция добавлена, id: {item.id}")
-
-
-# Получить json со всеми данными фабрики
-@app.post("/data/save/settings")
-def get_settings(file_path: str = None):
-    # Задаём путь сохранения
-    if file_path:
-        service.save_file_name = file_path
-    service.save_settings_to_file()
-    return PlainTextResponse(content="Настройки сохранены в файл")
-
-
 # GET через наблюдатель, для получения модели по id
 @app.get("/data/event/get/{model_key}/{item_id}")
+@api_log("GET /data/event/get")
 async def get_with_observer(model_key: EventsModelKeyEnum, item_id: str):
     try:
         dto = service_dto({
@@ -320,13 +233,10 @@ async def get_with_observer(model_key: EventsModelKeyEnum, item_id: str):
             "target_model": model_key
         })
         response = service.event("get", dto)
-
         conv_factory = convert_factory()
         convert_data = conv_factory.create_dict_from_dto(response)
-
         factory = factory_entities()
         formatted_content = factory.create_default("json", convert_data)
-
         return PlainTextResponse(content=formatted_content)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -334,6 +244,7 @@ async def get_with_observer(model_key: EventsModelKeyEnum, item_id: str):
 
 # Put через наблюдатель, для добавления модели
 @app.put("/data/event/put/{model_key}")
+@api_log("PUT /data/event/put")
 async def put_with_observer(model_key: EventsModelKeyEnum, data: dict = Body(...)):
     """
     Пример запроса:
@@ -367,6 +278,7 @@ async def put_with_observer(model_key: EventsModelKeyEnum, data: dict = Body(...
             "target_model": model_key,
             f"target_{model_key}_dto": target_dto
         })
+
         response = service.event("put", service_dto_obj)
         json_response = json.dumps(response)
         return PlainTextResponse(content=json_response)
@@ -376,7 +288,8 @@ async def put_with_observer(model_key: EventsModelKeyEnum, data: dict = Body(...
 
 # Patch через наблюдатель, для обновления модели
 @app.patch("/data/event/patch/{model_key}")
-async def patch_with_observer(model_key: EventsModelKeyEnum, id: str="", data: dict = Body(...)):
+@api_log("PATCH /data/event/patch")
+async def patch_with_observer(model_key: EventsModelKeyEnum, id: str = "", data: dict = Body(...)):
     """
     Пример запроса:
     "id": "78d5db5d3f93429a9e9aa748658047d3"
@@ -421,6 +334,7 @@ async def patch_with_observer(model_key: EventsModelKeyEnum, id: str="", data: d
 
 # Delete через наблюдатель, для удаления модели
 @app.delete("/data/event/delete/{model_key}/{item_id}")
+@api_log("DELETE /data/event/delete")
 async def delete_with_observer(model_key: EventsModelKeyEnum, item_id: str):
     try:
         dto = service_dto({
@@ -434,7 +348,64 @@ async def delete_with_observer(model_key: EventsModelKeyEnum, item_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# Получение всех настроек логгера
+@app.get("/logger/setting")
+@api_log("GET /logger/setting")
+def get_logger_settings():
+    try:
+        settings = service.get_logger_settings()
+        return JSONResponse(content=settings)
+    except Exception as e:
+        raise HTTPException(status_code=500, content={"error": str(e)})
+
+
+# Получение конкретной настройки логгера
+@app.get("/logger/{setting_key}")
+@api_log("GET /logger")
+def get_logger_setting(setting_key: LoggerSettingEnum):
+    try:
+        method_name = f"get_{setting_key.value.replace('_', '_')}"
+        if hasattr(service, method_name):
+            result = getattr(service, method_name)()
+            return JSONResponse(content={setting_key.value: result})
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown logger setting: {setting_key.value}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Изменение параметров логгера напрямую через service
+@app.patch("/logger/{setting_key}")
+@api_log("PATCH /logger")
+async def patch_logger_setting(setting_key: LoggerSettingEnum, value: str = Query(...)):
+    try:
+        # Конвертируем value в нужный тип
+        if value.lower() in ['true', 'false']:
+            converted_value = value.lower() == 'true'
+        else:
+            converted_value = value
+
+        # Вызываем соответствующий метод service
+        method_name = f"set_{setting_key.value.replace('_', '_')}"
+        if hasattr(service, method_name):
+            result = getattr(service, method_name)(converted_value)
+            if result:
+                return PlainTextResponse(content=f"Logger setting '{setting_key.value}' updated to '{value}'")
+            else:
+                raise HTTPException(status_code=500, detail="Failed to update logger setting")
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown logger setting: {setting_key.value}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # Базовый ответ API
 @app.get("/")
+@api_log("GET /")
 def root():
-    return {"message": "API запущено, данные загружены из startservice"}
+    return {"message": "API запущено, данные загружены из start_service"}

@@ -18,9 +18,9 @@ class storage_service(abstract_scrvice):
     # Метод для получения склада (по id)
     def get(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_model') and dto.target_model == "storage"):
             return None
-        if dto.target_model != "storage":
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке получения
@@ -45,7 +45,7 @@ class storage_service(abstract_scrvice):
     # Метод для добавления объекта
     def put(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_storage_dto:
+        if not (hasattr(dto, 'target_storage_dto') and dto.target_storage_dto):
             return None
 
         # LOG Предупреждение о попытке добавления
@@ -98,9 +98,9 @@ class storage_service(abstract_scrvice):
     # Метод для обновления объекта
     def patch(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_storage_dto:
+        if not (hasattr(dto, 'target_storage_dto') and dto.target_storage_dto):
             return None
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке обновления
@@ -149,9 +149,9 @@ class storage_service(abstract_scrvice):
     # Метод для удаления объекта
     def delete(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_model') and dto.target_model == "storage"):
             return None
-        if dto.target_model != "storage":
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке удаления

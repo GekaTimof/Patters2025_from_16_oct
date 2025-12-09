@@ -1,4 +1,5 @@
 from datetime import datetime
+from Src.Dtos.logger_settings_dto import logger_settings_dto
 from Src.Core.abstract_dto import abstract_dto
 from Src.Core.common import common
 from Src.Dtos.storage_dto import storage_dto
@@ -60,23 +61,6 @@ class start_service:
             cls.instance = super(start_service, cls).__new__(cls)
         return cls.instance
 
-    # Создаём лог (текст, тип лога)
-    def log(self, message, log_type):
-        return self.__logger.log(
-            message=message,
-            log_type=log_type
-        )
-
-
-    # Создаём событие через наблюдатель
-    def event(self, event: str, dto):
-        return self.__observer.event(
-            repository=self.repository,
-            event=event,
-            dto=dto,
-            service_logger=self.__logger
-        )
-
 
     # получить рапозиторий целиком
     @property
@@ -117,25 +101,169 @@ class start_service:
         self.__save_file_name = save_file_name.strip()
 
 
+    # Создаём лог (текст, тип лога)
+    def log(self, message, log_type):
+        return self.__logger.log(
+            message=message,
+            log_type=log_type
+        )
+
+
+    # Создаём событие через наблюдатель
+    def event(self, event: str, dto):
+        return self.__observer.event(
+            repository=self.repository,
+            event=event,
+            dto=dto,
+            service_logger=self.__logger
+        )
+
+
     # Текущая конфигурация
     def settings(self) -> str:
         settings_json = self.__create_json_settings()
         return settings_json
 
+
     # Создание логера
     def set_logger(self) -> bool:
         try:
-            self.__logger = logger({
-                logger.log_type_setting_key(): self.repository.data[reposity.log_type_setting_key()],
-                logger.log_path_setting_key(): "logs/service.log",
-                logger.show_info_logs_setting_key(): self.repository.data[reposity.show_info_logs_setting_key()],
-                logger.show_warning_logs_setting_key(): self.repository.data[reposity.show_errors_logs_setting_key()],
-                logger.show_errors_logs_setting_key(): self.repository.data[reposity.show_warning_logs_setting_key()]
-            })
+            # Создаём DTO настроек логера
+            settings_dto = logger_settings_dto()
+            settings_dto.init_from_repository(self.repository)
+
+            # Создаём логгер с DTO
+            self.__logger = logger(settings_dto)
 
             return True
         except:
             return False
+
+
+    # Метод для получения типа лога
+    def get_log_type(self) -> str:
+        try:
+            if self.__logger:
+                return self.__logger.settings.log_type
+            return ""
+        except:
+            return ""
+
+
+    # Метод для получения пути лога
+    def get_log_path(self) -> str:
+        try:
+            if self.__logger:
+                return self.__logger.settings.log_path
+            return ""
+        except:
+            return ""
+
+
+    # Метод для получения настройки INFO логов
+    def get_show_info_logs(self) -> bool:
+        try:
+            if self.__logger:
+                return self.__logger.settings.show_info_logs
+            return False
+        except:
+            return False
+
+
+    # Метод для получения настройки WARNING логов
+    def get_show_warning_logs(self) -> bool:
+        try:
+            if self.__logger:
+                return self.__logger.settings.show_warning_logs
+            return False
+        except:
+            return False
+
+
+    # Метод для получения настройки ERROR логов
+    def get_show_errors_logs(self) -> bool:
+        try:
+            if self.__logger:
+                return self.__logger.settings.show_errors_logs
+            return False
+        except:
+            return False
+
+
+    # Метод для получения всех настроек логгера
+    def get_logger_settings(self) -> dict:
+        try:
+            if self.__logger:
+                return {
+                    "log_type": self.get_log_type(),
+                    "log_path": self.get_log_path(),
+                    "show_info_logs": self.get_show_info_logs(),
+                    "show_warning_logs": self.get_show_warning_logs(),
+                    "show_errors_logs": self.get_show_errors_logs()
+                }
+            return {}
+        except:
+            return {}
+
+
+    # Метод для изменения типа лога
+    def set_log_type(self, log_type: str) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_log_type(log_type)
+                self.repository.data[reposity.log_type_setting_key()] = log_type
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения пути лога
+    def set_log_path(self, log_path: str) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_log_path(log_path)
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения отображения INFO логов
+    def set_show_info_logs(self, show_info: bool) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_show_info_logs(show_info)
+                self.repository.data[reposity.show_info_logs_setting_key()] = show_info
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения отображения WARNING логов
+    def set_show_warning_logs(self, show_warning: bool) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_show_warning_logs(show_warning)
+                self.repository.data[reposity.show_warning_logs_setting_key()] = show_warning
+                return True
+            return False
+        except:
+            return False
+
+
+    # Метод для изменения отображения ERROR логов
+    def set_show_errors_logs(self, show_error: bool) -> bool:
+        try:
+            if self.__logger:
+                self.__logger.set_show_errors_logs(show_error)
+                self.repository.data[reposity.show_errors_logs_setting_key()] = show_error
+                return True
+            return False
+        except:
+            return False
+
 
     # Создание наблюдателя
     def set_observer(self) -> bool:
