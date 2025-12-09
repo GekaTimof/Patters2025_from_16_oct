@@ -344,6 +344,59 @@ async def delete_with_observer(model_key: EventsModelKeyEnum, item_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# Получение всех настроек логгера
+@app.get("/logger/setting")
+def get_logger_settings():
+    try:
+        settings = service.get_logger_settings()
+        return JSONResponse(content=settings)
+    except Exception as e:
+        raise HTTPException(status_code=500, content={"error": str(e)})
+
+
+# Получение конкретной настройки логгера
+@app.get("/logger/{setting_key}")
+def get_logger_setting(setting_key: LoggerSettingEnum):
+    try:
+        method_name = f"get_{setting_key.value.replace('_', '_')}"
+        if hasattr(service, method_name):
+            result = getattr(service, method_name)()
+            return JSONResponse(content={setting_key.value: result})
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown logger setting: {setting_key.value}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Изменение параметров логгера напрямую через service
+@app.patch("/logger/{setting_key}")
+async def patch_logger_setting(setting_key: LoggerSettingEnum, value: str = Query(...)):
+    try:
+        # Конвертируем value в нужный тип
+        if value.lower() in ['true', 'false']:
+            converted_value = value.lower() == 'true'
+        else:
+            converted_value = value
+
+        # Вызываем соответствующий метод service
+        method_name = f"set_{setting_key.value.replace('_', '_')}"
+        if hasattr(service, method_name):
+            result = getattr(service, method_name)(converted_value)
+            if result:
+                return PlainTextResponse(content=f"Logger setting '{setting_key.value}' updated to '{value}'")
+            else:
+                raise HTTPException(status_code=500, detail="Failed to update logger setting")
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown logger setting: {setting_key.value}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # Базовый ответ API
 @app.get("/")
 @api_log("GET /")
