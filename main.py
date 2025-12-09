@@ -3,6 +3,8 @@ from fastapi.responses import PlainTextResponse, JSONResponse
 from enum import Enum
 from Src.Core.common import common
 from Src.Models.storage_model import storage_model
+import uuid
+import json
 from Src.Models.range_model import range_model
 from Src.Dtos.storage_dto import storage_dto
 from Src.Models.transaction_model import transaction_model
@@ -16,6 +18,10 @@ from Src.Core.validator import convertation_exception, operation_exception, argu
 from fastapi import Request
 from Src.Logics.osv_calculator import osv_calculator
 from Src.Core.prototype import prototype
+from Src.Dtos.service_dto import service_dto
+from Src.Dtos.nomenclature_dto import nomenclature_dto
+from Src.Dtos.range_dto import range_dto
+from Src.Dtos.group_dto import group_dto
 
 # иницилизация api
 app = FastAPI()
@@ -31,17 +37,33 @@ service.load_file_name = "settings_my.json"
 try:
     service.start()
 except Exception as e:
-    print(f"Ошибка при запуске startservice: {e}")
+    print(f"Ошибка при запуске start_service: {e}")
 
-# список всех объектов, которые можно предоставить (их ключи храняться в репозитории)
+# Список всех объектов, которые можно предоставить (их ключи храняться в репозитории)
 repo_keys = service.repository.keys()
-# ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
+# Ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
 RepoKeyEnum = Enum('RepoKeyEnum', [(key, key) for key in repo_keys], type=str)
 
-# список всех настроек, которые можно предоставить (их ключи храняться в репозитории)
+# Список всех настроек, которые можно предоставить (их ключи храняться в репозитории)
 settings_keys = service.repository.setting_keys()
-# ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
+# Ограничения для repo_key - только аргумент входящий в RepoKeyEnum (ключ репозитория)
 SettingsKeyEnum = Enum('SettingsKeyEnum', [(key, key) for key in settings_keys], type=str)
+
+# Словарь соответствия model_key → DTO класс
+DTO_MAPPING = {
+    "nomenclature": nomenclature_dto,
+    "range": range_dto,
+    "group": group_dto,
+    "storage": storage_dto
+}
+
+# Список моделей которые можнор обработать через events
+EventsModelKeyEnum = Enum('EventsModelKeyEnum', [(key, key) for key in [
+    "nomenclature",
+    "range",
+    "group",
+    "storage",
+]], type=str)
 
 
 # Обработчик моих ошибок — возвращает подробное сообщение с кодом 400
@@ -287,6 +309,129 @@ def get_settings(file_path: str = None):
         service.save_file_name = file_path
     service.save_settings_to_file()
     return PlainTextResponse(content="Настройки сохранены в файл")
+
+
+# GET через наблюдатель, для получения модели по id
+@app.get("/data/event/get/{model_key}/{item_id}")
+async def get_with_observer(model_key: EventsModelKeyEnum, item_id: str):
+    try:
+        dto = service_dto({
+            "target_id": item_id,
+            "target_model": model_key
+        })
+        response = service.event("get", dto)
+
+        conv_factory = convert_factory()
+        convert_data = conv_factory.create_dict_from_dto(response)
+
+        factory = factory_entities()
+        formatted_content = factory.create_default("json", convert_data)
+
+        return PlainTextResponse(content=formatted_content)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# Put через наблюдатель, для добавления модели
+@app.put("/data/event/put/{model_key}")
+async def put_with_observer(model_key: EventsModelKeyEnum, data: dict = Body(...)):
+    """
+    Пример запроса:
+    {
+    "target_nomenclature_dto": {
+        "group_id": "7f4ecdab-0f01-4216-8b72-4c91d22b8918",
+        "range_id": "adb7510f-687d-428f-a697-26e53d3f65b7",
+        "name": "Новый товар"
+        }
+    }
+    """
+    try:
+        # Динамически создаём DTO для model_key
+        target_dto_data = data.get(f"target_{model_key}_dto")
+        if not target_dto_data:
+            raise HTTPException(status_code=400, detail=f"Missing target_{model_key}_dto")
+
+        dto_class = DTO_MAPPING.get(model_key)
+        if not dto_class:
+            raise HTTPException(status_code=400, detail=f"Unknown model: {model_key}")
+
+        # Заполняем setters динамически
+        target_dto = dto_class()
+        setters = common.get_setters(target_dto)
+        for setter in setters:
+            if setter in target_dto_data:
+                setattr(target_dto, setter, target_dto_data[setter])
+
+        # Создаём service_dto
+        service_dto_obj = service_dto({
+            "target_model": model_key,
+            f"target_{model_key}_dto": target_dto
+        })
+        response = service.event("put", service_dto_obj)
+        json_response = json.dumps(response)
+        return PlainTextResponse(content=json_response)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# Patch через наблюдатель, для обновления модели
+@app.patch("/data/event/patch/{model_key}")
+async def patch_with_observer(model_key: EventsModelKeyEnum, id: str="", data: dict = Body(...)):
+    """
+    Пример запроса:
+    "id": "78d5db5d3f93429a9e9aa748658047d3"
+    {
+    "target_nomenclature_dto": {
+        "group_id": "7f4ecdab-0f01-4216-8b72-4c91d22b8918",
+        "range_id": "adb7510f-687d-428f-a697-26e53d3f65b7",
+        "name": "Новый товар изменённый"
+        }
+    }
+    """
+    try:
+        # Динамически создаём DTO для model_key
+        target_dto_data = data.get(f"target_{model_key}_dto")
+        if not target_dto_data:
+            raise HTTPException(status_code=400, detail=f"Missing target_{model_key}_dto")
+
+        dto_class = DTO_MAPPING.get(model_key)
+        if not dto_class:
+            raise HTTPException(status_code=400, detail=f"Unknown model: {model_key}")
+
+        # Заполняем setters динамически
+        target_dto = dto_class()
+        setters = common.get_setters(target_dto)
+        for setter in setters:
+            if setter in target_dto_data:
+                setattr(target_dto, setter, target_dto_data[setter])
+
+        # Создаём service_dto
+        service_dto_obj = service_dto({
+            "target_model": model_key,
+            "target_id": id,
+            f"target_{model_key}_dto": target_dto
+        })
+
+        response = service.event("patch", service_dto_obj)
+        json_response = json.dumps(response)
+        return PlainTextResponse(content=json_response)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# Delete через наблюдатель, для удаления модели
+@app.delete("/data/event/delete/{model_key}/{item_id}")
+async def delete_with_observer(model_key: EventsModelKeyEnum, item_id: str):
+    try:
+        dto = service_dto({
+            "target_id": item_id,
+            "target_model": model_key
+        })
+        response = service.event("delete", dto)
+        json_response = json.dumps(response)
+        return PlainTextResponse(content=json_response)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # Базовый ответ API
