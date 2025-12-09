@@ -18,9 +18,9 @@ class nomenclature_service(abstract_scrvice):
     # Метод для получения номенклатуры (по id)
     def get(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_model') and dto.target_model == "nomenclature"):
             return None
-        if dto.target_model != "nomenclature":
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке получения
@@ -45,7 +45,7 @@ class nomenclature_service(abstract_scrvice):
     # Метод для добавления объекта
     def put(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_nomenclature_dto:
+        if not (hasattr(dto, 'target_nomenclature_dto') and dto.target_nomenclature_dto):
             return None
 
         # LOG Предупреждение о попытке добавления
@@ -107,9 +107,9 @@ class nomenclature_service(abstract_scrvice):
     # Метод для обновления объекта
     def patch(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_nomenclature_dto:
+        if not (hasattr(dto, 'target_nomenclature_dto') and dto.target_nomenclature_dto):
             return None
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке обновления
@@ -160,9 +160,9 @@ class nomenclature_service(abstract_scrvice):
     # Метод для удаления объекта
     def delete(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_model') and dto.target_model == "nomenclature"):
             return None
-        if dto.target_model != "nomenclature":
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке удаления

@@ -18,9 +18,9 @@ class group_service(abstract_scrvice):
     # Метод для получения группы (по id)
     def get(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_model') and dto.target_model == "group"):
             return None
-        if dto.target_model != "group":
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке получения
@@ -44,7 +44,7 @@ class group_service(abstract_scrvice):
     # Метод для добавления объекта
     def put(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_group_dto:
+        if not (hasattr(dto, 'target_group_dto') and dto.target_group_dto):
             return None
 
         # LOG Предупреждение о попытке добавления
@@ -84,12 +84,13 @@ class group_service(abstract_scrvice):
             service_logger.log("Error of group putting", "ERROR")
             raise operation_exception("Cant put group (it already exist)")
 
+
     # Метод для обновления объекта
     def patch(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_group_dto:
+        if not (hasattr(dto, 'target_group_dto') and dto.target_group_dto):
             return None
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке обновления
@@ -133,12 +134,13 @@ class group_service(abstract_scrvice):
             service_logger.log("Error of group patching", "ERROR")
             raise operation_exception("Cant patch group (it have dependent objects)")
 
+
     # Метод для удаления объекта
     def delete(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_model') and dto.target_model == "group"):
             return None
-        if dto.target_model != "group":
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке удаления

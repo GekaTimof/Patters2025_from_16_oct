@@ -18,9 +18,9 @@ class range_service(abstract_scrvice):
     # Метод для получения диапазона (по id)
     def get(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
-        if dto.target_model != "range":
+        if not (hasattr(dto, 'target_model') and dto.target_id == range):
             return None
 
         # LOG Предупреждение о попытке получения
@@ -44,7 +44,7 @@ class range_service(abstract_scrvice):
     # Метод для добавления объекта
     def put(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_range_dto:
+        if not (hasattr(dto, 'target_range_dto') and dto.target_range_dto):
             return None
 
         # LOG Предупреждение о попытке добавления
@@ -84,12 +84,13 @@ class range_service(abstract_scrvice):
             service_logger.log("Error of range putting", "ERROR")
             raise operation_exception("Cant put range (it already exist)")
 
+
     # Метод для обновления объекта
     def patch(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_range_dto:
+        if not (hasattr(dto, 'target_range_dto') and dto.target_range_dto):
             return None
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке обновления
@@ -136,9 +137,9 @@ class range_service(abstract_scrvice):
     # Метод для удаления объекта
     def delete(self, repository: reposity, dto: service_dto, service_logger: logger):
         # Если аргументы в dto не подходят
-        if not dto.target_id:
+        if not (hasattr(dto, 'target_model') and dto.target_model == "range"):
             return None
-        if dto.target_model != "range":
+        if not (hasattr(dto, 'target_id') and dto.target_id):
             return None
 
         # LOG Предупреждение о попытке удаления
