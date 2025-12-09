@@ -248,10 +248,12 @@ async def get_with_observer(model_key: EventsModelKeyEnum, item_id: str):
 async def put_with_observer(model_key: EventsModelKeyEnum, data: dict = Body(...)):
     """
     Пример запроса:
+    {
     "target_nomenclature_dto": {
         "group_id": "7f4ecdab-0f01-4216-8b72-4c91d22b8918",
         "range_id": "adb7510f-687d-428f-a697-26e53d3f65b7",
         "name": "Новый товар"
+        }
     }
     """
     try:
@@ -291,10 +293,12 @@ async def patch_with_observer(model_key: EventsModelKeyEnum, id: str = "", data:
     """
     Пример запроса:
     "id": "78d5db5d3f93429a9e9aa748658047d3"
+    {
     "target_nomenclature_dto": {
         "group_id": "7f4ecdab-0f01-4216-8b72-4c91d22b8918",
         "range_id": "adb7510f-687d-428f-a697-26e53d3f65b7",
         "name": "Новый товар изменённый"
+        }
     }
     """
     try:
