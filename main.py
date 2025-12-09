@@ -346,6 +346,7 @@ async def delete_with_observer(model_key: EventsModelKeyEnum, item_id: str):
 
 # Получение всех настроек логгера
 @app.get("/logger/setting")
+@api_log("GET /logger/setting")
 def get_logger_settings():
     try:
         settings = service.get_logger_settings()
@@ -356,6 +357,7 @@ def get_logger_settings():
 
 # Получение конкретной настройки логгера
 @app.get("/logger/{setting_key}")
+@api_log("GET /logger")
 def get_logger_setting(setting_key: LoggerSettingEnum):
     try:
         method_name = f"get_{setting_key.value.replace('_', '_')}"
@@ -372,6 +374,7 @@ def get_logger_setting(setting_key: LoggerSettingEnum):
 
 # Изменение параметров логгера напрямую через service
 @app.patch("/logger/{setting_key}")
+@api_log("PATCH /logger")
 async def patch_logger_setting(setting_key: LoggerSettingEnum, value: str = Query(...)):
     try:
         # Конвертируем value в нужный тип
